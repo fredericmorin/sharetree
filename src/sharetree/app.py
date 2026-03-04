@@ -6,6 +6,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from sharetree import settings
 from sharetree.api.access import router as access_router
+from sharetree.api.browse import router as browse_router
 from sharetree.api.health import router as health_router
 
 app = FastAPI()
@@ -15,6 +16,7 @@ register_exception_handlers(app)  # consistent error and success api responses
 api = APIRouter(prefix="/api/v1")
 api.include_router(health_router)
 api.include_router(access_router)
+api.include_router(browse_router)
 
 
 @api.get("", include_in_schema=False)
