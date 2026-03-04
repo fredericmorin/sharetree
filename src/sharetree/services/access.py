@@ -15,7 +15,7 @@ class ActiveAccessCodes(TypedDict):
     accessible_paths: list[str]
 
 
-def get_access_code(access_codes: list[str]) -> ActiveAccessCodes:
+def resolve_access_code_paths(access_codes: list[str]) -> ActiveAccessCodes:
     valid_codes = {code: MAGIC_CODES[code] for code in access_codes if code in MAGIC_CODES}
     paths = set().union(*list(valid_codes.values()))
     return ActiveAccessCodes(valid_active_codes=list(valid_codes.keys()), accessible_paths=list(paths))

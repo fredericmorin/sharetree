@@ -18,7 +18,7 @@ class AccessCodesResponse(BaseModel):
 )
 async def get_access_code(request: Request) -> ResponseModel[AccessCodesResponse]:
     codes: list[str] = request.session.get("access_codes", [])
-    active_access_codes = access_service.get_access_code(codes)
+    active_access_codes = access_service.resolve_access_code_paths(codes)
     return ResponseModel(
         data=AccessCodesResponse.model_construct(
             active_codes=active_access_codes["valid_active_codes"],
