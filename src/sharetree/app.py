@@ -1,6 +1,5 @@
 from api_exception import register_exception_handlers
 from fastapi import APIRouter, FastAPI
-from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -17,13 +16,6 @@ api = APIRouter(prefix="/api/v1")
 api.include_router(health_router)
 api.include_router(access_router)
 api.include_router(browse_router)
-
-
-@api.get("", include_in_schema=False)
-async def api_root() -> RedirectResponse:
-    return RedirectResponse(url="/redoc")
-
-
 app.include_router(api)
 
 
