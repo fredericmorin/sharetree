@@ -13,10 +13,11 @@ authors = [
 ]
 
 dependencies = [
-    # "pytz",
-    "fastapi",
     "uvicorn",
     "starlette[full]", # for session management
+    # api
+    "fastapi",
+    "apiexception", # standardize success and error response
 ]
 
 [project.optional-dependencies]
