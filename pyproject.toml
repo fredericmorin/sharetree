@@ -1,0 +1,28 @@
+[build-system]
+requires = ["uv_build >= 0.9.18, <0.10.0"]
+build-backend = "uv_build"
+
+[project]
+name = "sharetree"
+version = "0.1.0"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "Frederic Morin", email = "frederic.morin.8@gmail.com"},
+]
+
+dependencies = [
+    # "pytz",
+    "fastapi",
+    "uvicorn",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "mypy", "ruff", "uv", "ipdb"]
+
+[project.scripts]
+sharetree = "sharetree.__main__:main"
+
+[tool.ruff]
+line-length = 120
