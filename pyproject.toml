@@ -16,6 +16,7 @@ dependencies = [
     # "pytz",
     "fastapi",
     "uvicorn",
+    "starlette[full]", # for session management
 ]
 
 [project.optional-dependencies]
