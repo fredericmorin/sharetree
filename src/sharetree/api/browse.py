@@ -12,6 +12,14 @@ def _is_accessible(rel_path: str, patterns: list[str]) -> bool:
     return any(fnmatch.fnmatch(rel_path, p) for p in patterns)
 
 
+def _dir_is_accessible(path: str, patterns: list[str]) -> bool:
+    # A directory is reachable if any pattern matches something directly inside
+    # it, or if any pattern goes deeper (starts with the dir prefix).
+    # Note: fnmatch `*` matches across `/`, so patterns are recursive by default.
+    prefix = ("/" + path).replace("//", "/").rstrip("/") + "/"
+    return any(fnmatch.fnmatch(prefix + "x", p) or p.startswith(prefix) for p in patterns)
+
+
 @router.get("/{path:path}")
 @router.get("")
 async def list_directory(request: Request, path: str = "") -> dict:
@@ -21,13 +29,12 @@ async def list_directory(request: Request, path: str = "") -> dict:
     if not patterns:
         raise HTTPException(status_code=403, detail="Access denied")
 
-    # if not path.startswith("/"):
-    #     path = f"/{path}"
     target = (SHARE_ROOT / path).resolve()
 
-    print(target)
-
     if not target.is_relative_to(SHARE_ROOT.resolve()):
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    if not _dir_is_accessible(path, patterns):
         raise HTTPException(status_code=403, detail="Access denied")
 
     if not target.exists():
