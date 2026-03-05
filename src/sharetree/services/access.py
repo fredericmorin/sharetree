@@ -1,3 +1,4 @@
+import secrets
 from typing import TypedDict
 
 from fastapi import APIRouter
@@ -5,7 +6,7 @@ from fastapi import APIRouter
 router = APIRouter(prefix="/access")
 
 
-MAGIC_CODES = {
+MAGIC_CODES: dict[str, list[str]] = {
     "abc": ["/*"],
 }
 
@@ -24,3 +25,9 @@ def resolve_access_code_paths(access_codes: list[str]) -> ActiveAccessCodes:
 def prune_invalid_access_codes(access_codes: list[str]) -> list[str]:
     valid_codes = set(access_codes) & MAGIC_CODES.keys()
     return list(valid_codes)
+
+
+def create_access_code(patterns: list[str]) -> str:
+    code = secrets.token_urlsafe(16)
+    MAGIC_CODES[code] = patterns
+    return code

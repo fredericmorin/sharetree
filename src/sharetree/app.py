@@ -5,6 +5,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from sharetree import settings
 from sharetree.api.access import router as access_router
+from sharetree.api.admin.access import router as admin_access_router
 from sharetree.api.browse import router as browse_router
 from sharetree.api.health import router as health_router
 
@@ -16,6 +17,11 @@ api = APIRouter(prefix="/api/v1")
 api.include_router(health_router)
 api.include_router(access_router)
 api.include_router(browse_router)
+
+admin = APIRouter(prefix="/admin")
+admin.include_router(admin_access_router)
+api.include_router(admin)
+
 app.include_router(api)
 
 
