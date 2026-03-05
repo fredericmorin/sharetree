@@ -2,12 +2,13 @@
 set -euo pipefail
 
 log() { echo "$(tput setaf 2)[log]$(tput sgr0) $@"; }
+trace_run() { echo "+ $@" >&2; "$@"; }
 SCRIPT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd -P )"
 
 cd "$SCRIPT_ROOT"
 log Format
-ruff format
+trace_run ruff format
 log Lint
-ruff check --fix
+trace_run ruff check --fix
 log Type check
-ty check
+trace_run ty check
