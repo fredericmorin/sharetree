@@ -1,0 +1,15 @@
+#!/bin/bash
+set -euo pipefail
+
+log() { echo "$(tput setaf 2)[log]$(tput sgr0) $@"; }
+SCRIPT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd -P )"
+
+cd "$SCRIPT_ROOT"
+log Format
+ruff format
+log Lint
+ruff check --fix
+log Type check
+ty check
+log Tests
+pytest
