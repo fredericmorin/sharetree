@@ -3,7 +3,8 @@ from typing import TypedDict
 
 from fastapi import APIRouter
 
-from sharetree.db import AccessCode, get_session
+from sharetree.db import get_session
+from sharetree.models.all import AccessCode
 
 router = APIRouter(prefix="/access")
 
