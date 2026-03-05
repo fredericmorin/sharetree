@@ -123,7 +123,7 @@ def test_patterns(root: Path) -> None:
 
     #  Pattern: exact folder name
     _test("", ["/docs"], {"docs"})
-    _test("docs", ["/docs"], {})
+    _test("docs", ["/docs"], {"guide.txt", "readme.txt", "sub"})
 
     #  Pattern: multiple patterns (union)
     _test("", ["/docs", "/images"], {"docs", "images"})

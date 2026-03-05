@@ -35,7 +35,10 @@ def list_directory_entries(path: str, patterns: list[str]) -> list[dict[str, Any
     if not target.is_relative_to(SHARE_ROOT.resolve()):
         raise HTTPException(status_code=403, detail="Access denied")
 
-    if not _dir_is_accessible(path, patterns):
+    norm_path = ("/" + path).replace("//", "/")
+    folder_matched = _is_accessible(norm_path, patterns)
+
+    if not folder_matched and not _dir_is_accessible(path, patterns):
         raise HTTPException(status_code=403, detail="Access denied")
 
     if not target.exists():
@@ -52,6 +55,6 @@ def list_directory_entries(path: str, patterns: list[str]) -> list[dict[str, Any
             "path": f"/{path}/{entry.name}".replace("//", "/"),
         }
         for entry in sorted(target.iterdir(), key=lambda e: (e.is_file(), e.name))
-        if _entry_is_visible(f"/{path}/{entry.name}".replace("//", "/"), entry.is_dir(), patterns)
+        if folder_matched or _entry_is_visible(f"/{path}/{entry.name}".replace("//", "/"), entry.is_dir(), patterns)
     ]
     return entries
