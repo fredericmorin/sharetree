@@ -11,5 +11,3 @@ log Lint
 ruff check --fix
 log Type check
 ty check
-log Tests
-pytest

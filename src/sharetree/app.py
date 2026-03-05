@@ -1,3 +1,6 @@
+from contextlib import asynccontextmanager
+from typing import AsyncIterator
+
 from api_exception import register_exception_handlers
 from fastapi import APIRouter, FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -8,8 +11,16 @@ from sharetree.api.access import router as access_router
 from sharetree.api.admin.access import router as admin_access_router
 from sharetree.api.browse import router as browse_router
 from sharetree.api.health import router as health_router
+from sharetree.db import init_db
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    init_db()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET)  # type: ignore
 register_exception_handlers(app)  # consistent error and success api responses
 

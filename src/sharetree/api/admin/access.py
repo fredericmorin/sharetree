@@ -9,6 +9,7 @@ router = APIRouter(prefix="/access")
 
 class CreateAccessCodeRequest(BaseModel):
     patterns: list[str]
+    nick: str | None
 
 
 class CreateAccessCodeResponse(BaseModel):

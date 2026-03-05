@@ -9,5 +9,10 @@ cd "$SCRIPT_ROOT"
 [ ! -e "$SCRIPT_ROOT/venv/bin/uv" ] && log "Install uv" && "$SCRIPT_ROOT/venv/bin/pip" install uv
 source "$SCRIPT_ROOT/venv/bin/activate"
 
+export UV_PROJECT_ENVIRONMENT="$SCRIPT_ROOT/venv"
+
+log "Install dependencies"
+uv sync
+
 log "Install project as editable"
-uv pip install -U --editable .[dev]
+uv pip install --editable .[dev]

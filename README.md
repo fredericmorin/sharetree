@@ -8,7 +8,10 @@ Techstack: Python/sqla/fastapi/sqlite/vue
 
 * Create venv and install deps
     ```sh
-    bin/setup-dev.sh
+    make venv
+    verify  # fmt/lint/typing
+    pytest
+    sharetree
     ```
 
 

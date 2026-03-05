@@ -3,12 +3,9 @@ from typing import TypedDict
 
 from fastapi import APIRouter
 
+from sharetree.db import AccessCode, get_session
+
 router = APIRouter(prefix="/access")
-
-
-MAGIC_CODES: dict[str, list[str]] = {
-    "abc": ["/*"],
-}
 
 
 class ActiveAccessCodes(TypedDict):
@@ -17,17 +14,24 @@ class ActiveAccessCodes(TypedDict):
 
 
 def resolve_access_code_paths(access_codes: list[str]) -> ActiveAccessCodes:
-    valid_codes = {code: MAGIC_CODES[code] for code in access_codes if code in MAGIC_CODES}
-    paths = set().union(*list(valid_codes.values()))
+    with get_session() as session:
+        rows = session.query(AccessCode).filter(AccessCode.code.in_(access_codes)).all()
+    valid_codes = {row.code: row.patterns for row in rows}
+    paths = set().union(*list(valid_codes.values())) if valid_codes else set()
     return ActiveAccessCodes(valid_active_codes=list(valid_codes.keys()), accessible_paths=list(paths))
 
 
 def prune_invalid_access_codes(access_codes: list[str]) -> list[str]:
-    valid_codes = set(access_codes) & MAGIC_CODES.keys()
-    return list(valid_codes)
+    with get_session() as session:
+        rows = session.query(AccessCode.code).filter(AccessCode.code.in_(access_codes)).all()
+    return [row.code for row in rows]
 
 
-def create_access_code(patterns: list[str]) -> str:
+def create_access_code(patterns: list[str], nick: str | None = None) -> str:
     code = secrets.token_urlsafe(16)
-    MAGIC_CODES[code] = patterns
+    with get_session() as session:
+        entry = AccessCode(code=code, _patterns_json="", nick=nick)
+        entry.patterns = patterns
+        session.add(entry)
+        session.commit()
     return code
