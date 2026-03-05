@@ -9,7 +9,7 @@ from sharetree.api.browse import router as browse_router
 from sharetree.api.health import router as health_router
 
 app = FastAPI()
-app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET)
+app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET)  # type: ignore
 register_exception_handlers(app)  # consistent error and success api responses
 
 api = APIRouter(prefix="/api/v1")

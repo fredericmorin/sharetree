@@ -14,14 +14,14 @@ authors = [
 
 dependencies = [
     "uvicorn",
-    "starlette[full]", # for session management
+    "starlette[full]",  # for session management
     # api
     "fastapi",
-    "apiexception", # standardize success and error response
+    "apiexception",  # standardize success and error response
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "mypy", "ruff", "uv", "ipdb"]
+dev = ["pytest", "ty", "ruff", "uv", "ipdb"]
 
 [project.scripts]
 sharetree = "sharetree.__main__:main"
