@@ -18,6 +18,14 @@ def _dir_is_accessible(path: str, patterns: list[str]) -> bool:
     return any(fnmatch.fnmatch(prefix + "x", p) or p.startswith(prefix) for p in patterns)
 
 
+def _entry_is_visible(entry_path: str, is_dir: bool, patterns: list[str]) -> bool:
+    if _is_accessible(entry_path, patterns):
+        return True
+    if is_dir:
+        return _dir_is_accessible(entry_path.lstrip("/"), patterns)
+    return False
+
+
 def list_directory_entries(path: str, patterns: list[str]) -> list[dict[str, Any]]:
     if not patterns:
         raise HTTPException(status_code=403, detail="Access denied")
@@ -44,6 +52,6 @@ def list_directory_entries(path: str, patterns: list[str]) -> list[dict[str, Any
             "path": f"/{path}/{entry.name}".replace("//", "/"),
         }
         for entry in sorted(target.iterdir(), key=lambda e: (e.is_file(), e.name))
-        if _is_accessible(f"/{path}/{entry.name}".replace("//", "/"), patterns)
+        if _entry_is_visible(f"/{path}/{entry.name}".replace("//", "/"), entry.is_dir(), patterns)
     ]
     return entries
