@@ -21,6 +21,7 @@ dependencies = [
     "pydantic-settings",
     "sqlalchemy>=2.0.48",
     "alembic",
+    "structlog",
 ]
 
 [project.optional-dependencies]
