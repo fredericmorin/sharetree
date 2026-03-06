@@ -11,12 +11,12 @@ from sharetree.api.access import router as access_router
 from sharetree.api.admin.access import router as admin_access_router
 from sharetree.api.browse import router as browse_router
 from sharetree.api.health import router as health_router
-from sharetree.db import init_db
+from sharetree.db import run_migrations
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    init_db()
+    run_migrations()
     yield
 
 
