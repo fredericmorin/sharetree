@@ -27,16 +27,22 @@ def _entry_is_visible(entry_path: str, is_dir: bool, patterns: list[str]) -> boo
     return False
 
 
-def get_file_path(path: str, patterns: list[str]) -> Path:
+def _resolve_path(path: str, patterns: list[str]) -> tuple[Path, str]:
     if not patterns:
         raise HTTPException(status_code=403, detail="Access denied")
 
-    target = (settings.SHARE_ROOT / path.lstrip("/")).resolve()
+    target = (settings.SHARE_ROOT / path).resolve()
 
     if not target.is_relative_to(settings.SHARE_ROOT.resolve()):
         raise HTTPException(status_code=403, detail="Access denied")
 
     norm_path = ("/" + path).replace("//", "/")
+    return target, norm_path
+
+
+def get_file_path(path: str, patterns: list[str]) -> Path:
+    target, norm_path = _resolve_path(path, patterns)
+
     if not _is_accessible(norm_path, patterns):
         raise HTTPException(status_code=403, detail="Access denied")
 
@@ -50,15 +56,8 @@ def get_file_path(path: str, patterns: list[str]) -> Path:
 
 
 def list_directory_entries(path: str, patterns: list[str]) -> list[dict[str, Any]]:
-    if not patterns:
-        raise HTTPException(status_code=403, detail="Access denied")
+    target, norm_path = _resolve_path(path, patterns)
 
-    target = (settings.SHARE_ROOT / path).resolve()
-
-    if not target.is_relative_to(settings.SHARE_ROOT.resolve()):
-        raise HTTPException(status_code=403, detail="Access denied")
-
-    norm_path = ("/" + path).replace("//", "/")
     folder_matched = _is_accessible(norm_path, patterns)
 
     if not folder_matched and not _dir_is_accessible(path, patterns):
