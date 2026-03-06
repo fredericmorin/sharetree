@@ -1,4 +1,5 @@
 import fnmatch
+from pathlib import Path
 from typing import Any
 
 from fastapi import HTTPException
@@ -24,6 +25,28 @@ def _entry_is_visible(entry_path: str, is_dir: bool, patterns: list[str]) -> boo
     if is_dir:
         return _dir_is_accessible(entry_path.lstrip("/"), patterns)
     return False
+
+
+def get_file_path(path: str, patterns: list[str]) -> Path:
+    if not patterns:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    target = (settings.SHARE_ROOT / path.lstrip("/")).resolve()
+
+    if not target.is_relative_to(settings.SHARE_ROOT.resolve()):
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    norm_path = ("/" + path).replace("//", "/")
+    if not _is_accessible(norm_path, patterns):
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    if not target.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+
+    if not target.is_file():
+        raise HTTPException(status_code=400, detail="Path is not a file")
+
+    return target
 
 
 def list_directory_entries(path: str, patterns: list[str]) -> list[dict[str, Any]]:
