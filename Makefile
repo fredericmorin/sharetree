@@ -11,3 +11,11 @@ upgrade:
 check:
 	bin/verify
 	pytest
+
+.PHONY: migrate
+migrate:
+	alembic upgrade head
+
+.PHONY: migration
+migration:
+	alembic revision --autogenerate -m "$(msg)"
