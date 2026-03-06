@@ -5,9 +5,9 @@ from alembic.config import Config
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session
 
-from sharetree.settings import DATA_PATH
+from sharetree.settings import settings
 
-engine = create_engine(f"sqlite:///{DATA_PATH / 'sharetree.db'}", connect_args={"check_same_thread": False})
+engine = create_engine(f"sqlite:///{settings.DATA_PATH / 'sharetree.db'}", connect_args={"check_same_thread": False})
 
 
 class Base(DeclarativeBase):

@@ -49,7 +49,8 @@ def root(tmp_path: Path) -> Path:
 
 @pytest.fixture(autouse=True)
 def patch_share_root(root: Path):
-    with patch("sharetree.services.browse.SHARE_ROOT", root):
+    with patch("sharetree.services.browse.settings") as mock_settings:
+        mock_settings.SHARE_ROOT = root
         yield
 
 

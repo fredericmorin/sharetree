@@ -1,9 +1,27 @@
+from functools import lru_cache
 from pathlib import Path
 
-from starlette.config import Config
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-config = Config(".env", env_prefix="SHARETREE_")
 
-SESSION_SECRET: str = config("SESSION_SECRET")
-SHARE_ROOT: Path = config("SHARE_ROOT", cast=Path, default=Path("files"))
-DATA_PATH: Path = config("DATA_PATH", cast=Path, default=Path("data"))
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="SHARETREE_", env_file=".env")
+
+    SESSION_SECRET: str
+    SHARE_ROOT: Path = Path("files")
+    DATA_PATH: Path = Path("data")
+
+
+@lru_cache
+def _get_settings() -> Settings:
+    return Settings()  # type: ignore
+
+
+class _LazyProxy:
+    """Defers Settings instantiation (and env-var reads) until first attribute access."""
+
+    def __getattr__(self, name: str) -> object:
+        return getattr(_get_settings(), name)
+
+
+settings: Settings = _LazyProxy()  # type: ignore

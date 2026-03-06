@@ -3,7 +3,7 @@ from typing import Any
 
 from fastapi import HTTPException
 
-from sharetree.settings import SHARE_ROOT
+from sharetree.settings import settings
 
 
 def _is_accessible(rel_path: str, patterns: list[str]) -> bool:
@@ -30,9 +30,9 @@ def list_directory_entries(path: str, patterns: list[str]) -> list[dict[str, Any
     if not patterns:
         raise HTTPException(status_code=403, detail="Access denied")
 
-    target = (SHARE_ROOT / path).resolve()
+    target = (settings.SHARE_ROOT / path).resolve()
 
-    if not target.is_relative_to(SHARE_ROOT.resolve()):
+    if not target.is_relative_to(settings.SHARE_ROOT.resolve()):
         raise HTTPException(status_code=403, detail="Access denied")
 
     norm_path = ("/" + path).replace("//", "/")

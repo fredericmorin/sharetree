@@ -18,6 +18,7 @@ dependencies = [
     # api
     "fastapi",
     "apiexception", # standardize success and error response
+    "pydantic-settings",
     "sqlalchemy>=2.0.48",
     "alembic",
 ]

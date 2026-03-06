@@ -7,7 +7,6 @@
     "source.fixAll.ruff": "explicit",
     "source.organizeImports.ruff": "explicit"
   },
-  "python.defaultInterpreterPath": "venv/bin/python3",
   "python.terminal.activateEnvironment": false,
   "python.analysis.typeCheckingMode": "off",
   "ty.disableLanguageServices": false,

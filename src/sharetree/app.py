@@ -6,7 +6,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
-from sharetree import settings
+from sharetree.settings import settings
 from sharetree.api.access import router as access_router
 from sharetree.api.admin.access import router as admin_access_router
 from sharetree.api.browse import router as browse_router
