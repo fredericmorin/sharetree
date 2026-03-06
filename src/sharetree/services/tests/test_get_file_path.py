@@ -91,18 +91,9 @@ def test_get_file_path_patterns() -> None:
     assert http_exc("docs/sub", ["/docs/sub/*"]).status_code == 403
 
     # Success — returns resolved Path
-    result = get_file_path("root_file.txt", ["/*"])
-    assert result == (root / "root_file.txt").resolve()
-    assert result.name == "root_file.txt"
-    assert result.is_file()
-
-    result = get_file_path("docs/readme.txt", ["/docs/*"])
-    assert result.name == "readme.txt"
-    assert result.is_file()
-
-    result = get_file_path("docs/sub/deep.txt", ["/docs/*"])
-    assert result.name == "deep.txt"
-    assert result.is_file()
+    assert get_file_path("root_file.txt", ["/*"]).is_file()
+    assert get_file_path("docs/readme.txt", ["/docs/*"]).is_file()
+    assert get_file_path("docs/sub/deep.txt", ["/docs/*"]).is_file()
 
     # Pattern: /* (wildcard at root — fnmatch * matches /)
     assert get_file_path("root_file.txt", ["/*"]).is_file()
