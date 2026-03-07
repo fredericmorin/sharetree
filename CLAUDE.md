@@ -31,12 +31,12 @@ sharetree/
 │   ├── setup-dev-venv.sh   # Create + populate venv via uv
 │   └── verify              # Run ruff format, ruff check --fix, ty check
 ├── docker/
-│   └── entrypoint.sh       # Container startup: Caddy mode or direct app mode
+│   └── entrypoint.sh       # Container startup script
 ├── frontend/               # Vue.js 3 SPA (Vite + Tailwind CSS v4 + shadcn-vue)
 │   └── src/
 │       ├── assets/         # index.css — Tailwind entry + shadcn design tokens
 │       ├── lib/            # utils.js — cn() class merging helper
-│       ├── views/          # AccessView.vue, BrowseView.vue
+│       ├── views/          # AccessView.vue, AdminLoginView.vue, BrowseView.vue
 │       └── components/
 │           ├── ui/         # shadcn-vue primitives: Button, Input, Card, Badge, Skeleton, Breadcrumb, Separator
 │           ├── FileIcon.vue     # File-type icon mapper (lucide-vue-next)
@@ -57,6 +57,8 @@ sharetree/
 │   │   ├── browse.py       # GET /api/v1/browse[/{path}]
 │   │   ├── download.py     # GET /download/{path}
 │   │   └── admin/access.py # POST /api/v1/admin/access/create
+│   │       admin/auth.py   # POST /api/v1/admin/login|logout, GET /api/v1/admin/me
+│   │       admin/deps.py   # require_admin_group dependency (session or header)
 │   └── services/
 │       ├── access.py       # Business logic: create/validate access codes
 │       ├── browse.py       # Business logic: directory listing, file path resolution
@@ -67,7 +69,7 @@ sharetree/
 ├── .dockerignore
 ├── alembic.ini
 ├── conftest.py             # Sets SHARETREE_SESSION_SECRET for test runs
-├── Dockerfile              # Multi-stage build: frontend + Python + Caddy
+├── Dockerfile              # Multi-stage build: frontend + Python
 ├── Makefile
 └── pyproject.toml
 ```
@@ -148,10 +150,13 @@ Base prefix: `/api/v1`
 | POST | `/access/activate` | Validates and adds an access code to the session |
 | GET | `/browse` | Lists root directory (filtered by session access codes) |
 | GET | `/browse/{path}` | Lists a subdirectory |
+| POST | `/admin/login` | Log in as admin using `ADMIN_PASSWORD` (disabled when `TRUST_HEADERS=true`) |
+| POST | `/admin/logout` | Clear admin session |
+| GET | `/admin/me` | Return current admin auth status (disabled when `TRUST_HEADERS=true`) |
 | POST | `/admin/access/create` | Creates a new access code with given patterns |
 | GET | `/download/{path}` | Downloads a file (access-controlled) |
 
-Admin endpoints live under `/api/v1/admin/`. In Docker (Caddy mode), admin routes are protected by HTTP basic auth; Caddy forwards `Remote-Groups: admins` to the app on successful authentication.
+Admin endpoints under `/api/v1/admin/` (except login/logout/me) require admin access. When `TRUST_HEADERS=false` (default), log in via `POST /api/v1/admin/login` with the configured `ADMIN_PASSWORD`. When `TRUST_HEADERS=true`, the upstream proxy must forward `Remote-Groups: admins`.
 
 ## Database
 
@@ -216,16 +221,16 @@ Include the doc update in the same commit or as a follow-up `dev: update docs` c
 docker build -t sharetree .
 ```
 
-The image supports two modes controlled by `SHARETREE_TRUST_HEADERS`:
+The app always listens on **port 8000**. The image supports two admin auth modes controlled by `SHARETREE_TRUST_HEADERS`:
 
-- **Caddy mode** (default, `TRUST_HEADERS` falsy): Caddy listens on `:80`, applies HTTP basic auth to `/api/v1/admin/*` using `SHARETREE_ADMIN_PASSWORD`, and forwards `Remote-Groups: admins` to the app on success. The app process listens on `localhost:8000` internally with `TRUST_HEADERS=true` to validate the forwarded header.
-- **Trusted-headers mode** (`TRUST_HEADERS=true`): App listens directly on `:8000`. An upstream reverse proxy is expected to handle auth and forward `Remote-Groups: admins` for admin access.
+- **Default mode** (`TRUST_HEADERS` falsy): Built-in admin login page at `/admin/login`. Set `SHARETREE_ADMIN_PASSWORD` to protect the admin API.
+- **Trusted-headers mode** (`TRUST_HEADERS=true`): An upstream reverse proxy handles auth and forwards `Remote-Groups: admins` to the app. The login page is disabled.
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `SHARETREE_SESSION_SECRET` | yes | — | Secret key for encrypted session cookies |
-| `SHARETREE_ADMIN_PASSWORD` | in Caddy mode | — | Password for Caddy basic auth on admin routes |
-| `SHARETREE_TRUST_HEADERS` | no | `false` | Enable header trust; disables Caddy |
+| `SHARETREE_ADMIN_PASSWORD` | when `TRUST_HEADERS` is falsy | — | Password for the built-in admin login page |
+| `SHARETREE_TRUST_HEADERS` | no | `false` | Trust `Remote-Groups` header from upstream proxy; disables login page |
 | `SHARETREE_SHARE_ROOT` | no | `/files` | Path to shared folder tree (mount a volume) |
 | `SHARETREE_DATA_PATH` | no | `/data` | Path to SQLite database directory (mount a volume) |
 
@@ -233,6 +238,5 @@ Volumes: `/data` (database), `/files` (shared files). Health check: `GET /api/v1
 
 ## Not Yet Implemented
 
-- Admin authentication (magic credentials, IP subnet)
 - Forward-auth API endpoint (for reverse proxy integration)
 - Redis support

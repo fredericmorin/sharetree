@@ -25,11 +25,11 @@ See [CLAUDE.md](CLAUDE.md) for full developer documentation.
   - [x] Dark/light mode toggle
   - [x] Loading skeletons, file-type icons, search/filter, copy-to-clipboard
 - [x] Admin API — create access codes with patterns and optional label
-- [ ] Admin authentication (trusted headers / magic credentials / IP subnet)
+- [x] Admin authentication — session login page (password) or trusted headers (reverse proxy)
 - [ ] Custom forward-auth API endpoint
 ## Deploy
 
-- [x] Docker — multi-stage image with frontend build and optional Caddy reverse proxy
+- [x] Docker — multi-stage image with frontend build
 - [ ] Redis session store
 
 ### Docker
@@ -38,10 +38,12 @@ See [CLAUDE.md](CLAUDE.md) for full developer documentation.
 docker build -t sharetree .
 ```
 
-#### Standalone mode (Caddy + basic auth on admin routes)
+The app always listens on **port 8000**. Admin authentication works in two modes:
 
-Listens on **port 80**. Admin routes (`/api/v1/admin/*`) require HTTP basic auth.
-The authenticated user's groups are forwarded to the app as a trusted header.
+#### Default mode (built-in admin login page)
+
+Admin routes are protected by a session-based login page at `/admin/login`.
+Set `SHARETREE_ADMIN_PASSWORD` to the desired admin password.
 
 ```yaml
 services:
@@ -49,7 +51,7 @@ services:
     image: sharetree
     build: .
     ports:
-      - "80:80"
+      - "8000:8000"
     volumes:
       - sharetree-data:/data
       - sharetree-files:/files
@@ -65,8 +67,8 @@ volumes:
 
 #### Trusted-headers mode (behind an existing reverse proxy)
 
-Listens on **port 8000**. Admin access is controlled by the `Remote-Groups: admins` header
-forwarded by your upstream proxy. Set `SHARETREE_TRUST_HEADERS=true` to enable header validation.
+Admin access is controlled by the `Remote-Groups: admins` header forwarded by your upstream proxy.
+Set `SHARETREE_TRUST_HEADERS=true` to enable header validation (disables the login page).
 
 ```yaml
 services:
@@ -97,8 +99,8 @@ docker compose up -d
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `SHARETREE_SESSION_SECRET` | yes | — | Secret key for encrypted session cookies (generate with `python -c "import secrets; print(secrets.token_urlsafe(32))"`) |
-| `SHARETREE_ADMIN_PASSWORD` | when `TRUST_HEADERS` is falsy | — | Password for Caddy basic auth on admin routes |
-| `SHARETREE_TRUST_HEADERS` | no | `false` | Trust `Remote-Groups` header from upstream proxy; disables Caddy |
+| `SHARETREE_ADMIN_PASSWORD` | when `TRUST_HEADERS` is falsy | — | Password for the built-in admin login page |
+| `SHARETREE_TRUST_HEADERS` | no | `false` | Trust `Remote-Groups` header from upstream proxy; disables the admin login page |
 | `SHARETREE_SHARE_ROOT` | no | `/files` | Path to the folder tree to share (mount a volume here) |
 | `SHARETREE_DATA_PATH` | no | `/data` | Path where the SQLite database is stored (mount a volume here) |
 

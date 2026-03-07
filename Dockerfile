@@ -16,18 +16,12 @@ COPY pyproject.toml uv.lock README.md ./
 COPY src/ src/
 RUN uv sync --no-dev --compile-bytecode
 
-# Stage 3: Caddy binary
-FROM caddy:2-alpine AS caddy
-
-# Stage 4: Minimal runtime image
+# Stage 3: Minimal runtime image
 FROM python:3.13-slim
 # Install curl for HEALTHCHECK
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
-
-# Copy Caddy binary
-COPY --from=caddy /usr/bin/caddy /usr/bin/caddy
 
 WORKDIR /app
 
