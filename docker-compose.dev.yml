@@ -1,0 +1,28 @@
+services:
+  api:
+    image: python:3.13-slim
+    working_dir: /app
+    volumes:
+      - .:/app
+      - venv:/app/.venv
+    environment:
+      SHARETREE_DEV: "true"
+      SHARETREE_SESSION_SECRET: "${SHARETREE_SESSION_SECRET:-dev-secret-change-me}"
+      SHARETREE_SHARE_ROOT: /app/files
+      SHARETREE_DATA_PATH: /app/data
+    command: >
+      sh -c "pip install uv -q && uv sync -q && python -m sharetree"
+    ports:
+      - "8000:8000"
+
+  frontend:
+    image: node:22-slim
+    working_dir: /app
+    volumes:
+      - .:/app
+      - node_modules:/app/frontend/node_modules
+    command: sh -c "cd frontend && npm install && npm run build -- --watch"
+
+volumes:
+  venv:
+  node_modules:
