@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     SHARE_ROOT: Path = Path("files")
     DATA_PATH: Path = Path("data")
     TRUST_HEADERS: bool = False
+    DEV: bool = False
 
 
 @lru_cache

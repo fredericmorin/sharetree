@@ -30,6 +30,8 @@ sharetree/
 ├── bin/
 │   ├── setup-dev-venv.sh   # Create + populate venv via uv
 │   └── verify              # Run ruff format, ruff check --fix, ty check
+├── docker/
+│   └── entrypoint.sh       # Container startup: Caddy mode or direct app mode
 ├── frontend/               # Vue.js 3 SPA (Vite)
 │   └── src/
 │       ├── views/          # AccessView.vue, BrowseView.vue
@@ -55,8 +57,10 @@ sharetree/
 │           ├── test_browse.py        # Tests for list_directory_entries()
 │           └── test_get_file_path.py # Tests for get_file_path()
 ├── static/                 # Built frontend output (served by FastAPI)
+├── .dockerignore
 ├── alembic.ini
 ├── conftest.py             # Sets SHARETREE_SESSION_SECRET for test runs
+├── Dockerfile              # Multi-stage build: frontend + Python + Caddy
 ├── Makefile
 └── pyproject.toml
 ```
@@ -83,6 +87,7 @@ Create a `.env` file in the repo root (`SHARETREE_` prefix for all vars):
 SHARETREE_SESSION_SECRET=<random-secret>   # required
 SHARETREE_SHARE_ROOT=files                 # optional, default: files/
 SHARETREE_DATA_PATH=data                   # optional, default: data/
+SHARETREE_DEV=true                         # optional, enables uvicorn auto-reload
 ```
 
 `SESSION_SECRET` is the only required variable.
@@ -135,7 +140,7 @@ Base prefix: `/api/v1`
 | POST | `/admin/access/create` | Creates a new access code with given patterns |
 | GET | `/download/{path}` | Downloads a file (access-controlled) |
 
-Admin endpoints live under `/api/v1/admin/`. Admin authentication is not yet implemented.
+Admin endpoints live under `/api/v1/admin/`. In Docker (Caddy mode), admin routes are protected by HTTP basic auth; Caddy forwards `Remote-Groups: admins` to the app on successful authentication.
 
 ## Database
 
@@ -194,9 +199,30 @@ When a feature commit is pushed, **update both `CLAUDE.md` and `README.md`** to 
 
 Include the doc update in the same commit or as a follow-up `dev: update docs` commit.
 
+## Docker Deployment
+
+```bash
+docker build -t sharetree .
+```
+
+The image supports two modes controlled by `SHARETREE_TRUST_HEADERS`:
+
+- **Caddy mode** (default, `TRUST_HEADERS` falsy): Caddy listens on `:80`, applies HTTP basic auth to `/api/v1/admin/*` using `SHARETREE_ADMIN_PASSWORD`, and forwards `Remote-Groups: admins` to the app on success. The app process listens on `localhost:8000` internally with `TRUST_HEADERS=true` to validate the forwarded header.
+- **Trusted-headers mode** (`TRUST_HEADERS=true`): App listens directly on `:8000`. An upstream reverse proxy is expected to handle auth and forward `Remote-Groups: admins` for admin access.
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `SHARETREE_SESSION_SECRET` | yes | — | Secret key for encrypted session cookies |
+| `SHARETREE_ADMIN_PASSWORD` | in Caddy mode | — | Password for Caddy basic auth on admin routes |
+| `SHARETREE_TRUST_HEADERS` | no | `false` | Enable header trust; disables Caddy |
+| `SHARETREE_SHARE_ROOT` | no | `/files` | Path to shared folder tree (mount a volume) |
+| `SHARETREE_DATA_PATH` | no | `/data` | Path to SQLite database directory (mount a volume) |
+| `SHARETREE_DEV` | no | `false` | Enable uvicorn auto-reload (development only) |
+
+Volumes: `/data` (database), `/files` (shared files). Health check: `GET /api/v1/health`.
+
 ## Not Yet Implemented
 
-- Admin authentication (trusted headers, magic credentials, IP subnet)
+- Admin authentication (magic credentials, IP subnet)
 - Forward-auth API endpoint (for reverse proxy integration)
-- Docker deployment
 - Redis support
