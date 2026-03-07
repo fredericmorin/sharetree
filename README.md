@@ -26,9 +26,54 @@ See [CLAUDE.md](CLAUDE.md) for full developer documentation.
 - [ ] Custom forward-auth API endpoint
 ## Deploy
 
-- [ ] Docker (Python app)
-  - [ ] Option to bundle Caddy with forward-auth
+- [x] Docker — multi-stage image with frontend build and optional Caddy reverse proxy
 - [ ] Redis session store
+
+### Docker
+
+```sh
+docker build -t sharetree .
+```
+
+#### Standalone mode (Caddy + basic auth on admin routes)
+
+Listens on **port 80**. Admin routes (`/api/v1/admin/*`) require HTTP basic auth.
+The authenticated user's groups are forwarded to the app as a trusted header.
+
+```sh
+docker run -d \
+  -p 80:80 \
+  -v sharetree-data:/data \
+  -v sharetree-files:/files \
+  -e SHARETREE_SESSION_SECRET=<random-secret> \
+  -e SHARETREE_ADMIN_PASSWORD=<admin-password> \
+  sharetree
+```
+
+#### Trusted-headers mode (behind an existing reverse proxy)
+
+Listens on **port 8000**. Admin access is controlled by the `Remote-Groups: admins` header
+forwarded by your upstream proxy. Set `SHARETREE_TRUST_HEADERS=true` to enable header validation.
+
+```sh
+docker run -d \
+  -p 8000:8000 \
+  -v sharetree-data:/data \
+  -v sharetree-files:/files \
+  -e SHARETREE_SESSION_SECRET=<random-secret> \
+  -e SHARETREE_TRUST_HEADERS=true \
+  sharetree
+```
+
+#### Environment variables
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `SHARETREE_SESSION_SECRET` | yes | — | Secret key for encrypted session cookies (generate with `python -c "import secrets; print(secrets.token_urlsafe(32))"`) |
+| `SHARETREE_ADMIN_PASSWORD` | when `TRUST_HEADERS` is falsy | — | Password for Caddy basic auth on admin routes |
+| `SHARETREE_TRUST_HEADERS` | no | `false` | Trust `Remote-Groups` header from upstream proxy; disables Caddy |
+| `SHARETREE_SHARE_ROOT` | no | `/files` | Path to the folder tree to share (mount a volume here) |
+| `SHARETREE_DATA_PATH` | no | `/data` | Path where the SQLite database is stored (mount a volume here) |
 
 ## Refs
 
