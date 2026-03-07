@@ -1,13 +1,15 @@
 <script setup>
 import { ref, computed, watch, onMounted, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useDebounceFn, useEventListener } from '@vueuse/core'
+import { useDebounceFn, useEventListener, useClipboard } from '@vueuse/core'
 import Breadcrumbs from '@/components/Breadcrumbs.vue'
 import EntryList from '@/components/EntryList.vue'
 import Input from '@/components/ui/input/index.vue'
 import Button from '@/components/ui/button/index.vue'
 import Skeleton from '@/components/ui/skeleton/index.vue'
-import { Search, AlertCircle, RefreshCw } from 'lucide-vue-next'
+import Badge from '@/components/ui/badge/index.vue'
+import Separator from '@/components/ui/separator/index.vue'
+import { Search, AlertCircle, RefreshCw, Copy, Check, KeyRound } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -17,6 +19,12 @@ const loading = ref(false)
 const error = ref(null)
 const searchQuery = ref('')
 const searchInput = useTemplateRef('searchInputRef')
+
+const activeCodes = ref([])
+const newCode = ref('')
+const codeError = ref(null)
+const submitting = ref(false)
+const { copy, copied, isSupported: clipboardSupported } = useClipboard()
 
 const currentPath = computed(() => {
   const p = route.params.path
@@ -60,8 +68,48 @@ useEventListener(document, 'keydown', (e) => {
   }
 })
 
+async function fetchActiveCodes() {
+  try {
+    const res = await fetch('/api/v1/access', { credentials: 'same-origin' })
+    if (!res.ok) return
+    const data = await res.json()
+    activeCodes.value = data.data?.active_code_details ?? []
+  } catch {
+    // silently ignore
+  }
+}
+
+async function activateCode() {
+  codeError.value = null
+  submitting.value = true
+  try {
+    const res = await fetch('/api/v1/access/activate', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: newCode.value.trim() }),
+    })
+    if (res.status === 404) {
+      codeError.value = 'Invalid access code.'
+      return
+    }
+    if (!res.ok) {
+      codeError.value = 'Activation failed. Please try again.'
+      return
+    }
+    newCode.value = ''
+    await fetchActiveCodes()
+    await fetchEntries()
+  } finally {
+    submitting.value = false
+  }
+}
+
 watch(() => route.params.path, fetchEntries)
-onMounted(fetchEntries)
+onMounted(() => {
+  fetchEntries()
+  fetchActiveCodes()
+})
 </script>
 
 <template>
@@ -103,5 +151,58 @@ onMounted(fetchEntries)
       </div>
       <EntryList :entries="entries" :search-query="searchQuery" />
     </template>
+
+    <Separator class="my-8" />
+
+    <div class="space-y-6">
+      <div v-if="activeCodes.length">
+        <p class="text-sm font-medium text-muted-foreground mb-3">Active access codes</p>
+        <ul class="flex flex-col gap-2">
+          <li
+            v-for="detail in activeCodes"
+            :key="detail.code"
+            class="flex items-center justify-between gap-2 rounded-md border bg-muted/40 px-3 py-2"
+          >
+            <div class="flex items-center gap-2 min-w-0">
+              <code class="font-mono text-sm truncate">{{ detail.code }}</code>
+              <Badge v-if="detail.nick" variant="secondary" class="shrink-0">{{ detail.nick }}</Badge>
+            </div>
+            <Button
+              v-if="clipboardSupported"
+              variant="ghost"
+              size="icon"
+              class="h-7 w-7 shrink-0"
+              type="button"
+              :aria-label="`Copy code ${detail.code}`"
+              @click="copy(detail.code)"
+            >
+              <Check v-if="copied" class="h-3.5 w-3.5 text-green-500" />
+              <Copy v-else class="h-3.5 w-3.5" />
+            </Button>
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="flex items-center gap-2 mb-3">
+          <KeyRound class="h-4 w-4 text-muted-foreground" />
+          <p class="text-sm font-medium text-muted-foreground">Add access code</p>
+        </div>
+        <form @submit.prevent="activateCode" class="flex gap-2">
+          <Input
+            v-model="newCode"
+            type="text"
+            placeholder="Access code"
+            autocomplete="off"
+            :disabled="submitting"
+            class="flex-1"
+          />
+          <Button type="submit" :disabled="submitting || !newCode.trim()">
+            {{ submitting ? 'Activating…' : 'Activate' }}
+          </Button>
+        </form>
+        <p v-if="codeError" class="mt-2 text-sm text-destructive">{{ codeError }}</p>
+      </div>
+    </div>
   </div>
 </template>
