@@ -69,12 +69,11 @@ docker run -d \
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `SHARETREE_SESSION_SECRET` | yes | — | Secret key for encrypted session cookies |
+| `SHARETREE_SESSION_SECRET` | yes | — | Secret key for encrypted session cookies (generate with `python -c "import secrets; print(secrets.token_urlsafe(32))"`) |
 | `SHARETREE_ADMIN_PASSWORD` | when `TRUST_HEADERS` is falsy | — | Password for Caddy basic auth on admin routes |
 | `SHARETREE_TRUST_HEADERS` | no | `false` | Trust `Remote-Groups` header from upstream proxy; disables Caddy |
 | `SHARETREE_SHARE_ROOT` | no | `/files` | Path to the folder tree to share (mount a volume here) |
 | `SHARETREE_DATA_PATH` | no | `/data` | Path where the SQLite database is stored (mount a volume here) |
-| `SHARETREE_DEV` | no | `false` | Enable uvicorn auto-reload (development only) |
 
 ## Refs
 

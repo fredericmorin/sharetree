@@ -41,6 +41,8 @@ EOF
     # Tell the app to validate the Remote-Groups header forwarded by Caddy.
     # This ensures direct access to port 8000 (bypassing Caddy) still requires auth.
     export SHARETREE_TRUST_HEADERS=true
+    # Disable dev reload mode (default is on; containers should not hot-reload).
+    export SHARETREE_DEV=false
 
     echo "Starting sharetree on localhost:8000..."
     sharetree &

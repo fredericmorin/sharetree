@@ -51,8 +51,6 @@ ENV PATH="/app/.venv/bin:$PATH" \
 
 VOLUME ["/data", "/files"]
 
-EXPOSE 80 8000
-
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:8000/api/v1/health || exit 1
 

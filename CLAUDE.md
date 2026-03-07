@@ -217,7 +217,6 @@ The image supports two modes controlled by `SHARETREE_TRUST_HEADERS`:
 | `SHARETREE_TRUST_HEADERS` | no | `false` | Enable header trust; disables Caddy |
 | `SHARETREE_SHARE_ROOT` | no | `/files` | Path to shared folder tree (mount a volume) |
 | `SHARETREE_DATA_PATH` | no | `/data` | Path to SQLite database directory (mount a volume) |
-| `SHARETREE_DEV` | no | `false` | Enable uvicorn auto-reload (development only) |
 
 Volumes: `/data` (database), `/files` (shared files). Health check: `GET /api/v1/health`.
 
