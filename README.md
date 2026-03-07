@@ -24,8 +24,6 @@ See [CLAUDE.md](CLAUDE.md) for full developer documentation.
 - [x] Admin API — create access codes with patterns and optional label
 - [ ] Admin authentication (trusted headers / magic credentials / IP subnet)
 - [ ] Custom forward-auth API endpoint
-- [ ] File upload
-
 ## Deploy
 
 - [ ] Docker (Python app)

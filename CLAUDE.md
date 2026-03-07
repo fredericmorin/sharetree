@@ -198,6 +198,5 @@ Include the doc update in the same commit or as a follow-up `dev: update docs` c
 
 - Admin authentication (trusted headers, magic credentials, IP subnet)
 - Forward-auth API endpoint (for reverse proxy integration)
-- File upload
 - Docker deployment
 - Redis support
