@@ -1,6 +1,18 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useClipboard } from '@vueuse/core'
+import Card from '@/components/ui/card/index.vue'
+import CardHeader from '@/components/ui/card/CardHeader.vue'
+import CardTitle from '@/components/ui/card/CardTitle.vue'
+import CardDescription from '@/components/ui/card/CardDescription.vue'
+import CardContent from '@/components/ui/card/CardContent.vue'
+import CardFooter from '@/components/ui/card/CardFooter.vue'
+import Button from '@/components/ui/button/index.vue'
+import Input from '@/components/ui/input/index.vue'
+import Badge from '@/components/ui/badge/index.vue'
+import Separator from '@/components/ui/separator/index.vue'
+import { Copy, Check, KeyRound } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -9,6 +21,8 @@ const codeInput = ref('')
 const error = ref(null)
 const submitting = ref(false)
 const activeCodes = ref([])
+
+const { copy, copied, isSupported: clipboardSupported } = useClipboard()
 
 async function fetchActiveCodes() {
   try {
@@ -52,133 +66,67 @@ onMounted(fetchActiveCodes)
 </script>
 
 <template>
-  <div class="access-page">
-    <h1>Enter access code</h1>
-    <p class="hint">You need an access code to browse files.</p>
-    <form @submit.prevent="activate" class="access-form">
-      <input
-        v-model="codeInput"
-        type="text"
-        placeholder="Access code"
-        autocomplete="off"
-        autofocus
-        :disabled="submitting"
-        class="code-input"
-      />
-      <button type="submit" :disabled="submitting || !codeInput.trim()" class="submit-btn">
-        {{ submitting ? 'Activating…' : 'Activate' }}
-      </button>
-    </form>
-    <p v-if="error" class="error">{{ error }}</p>
+  <div class="flex justify-center pt-8">
+    <Card class="w-full max-w-md">
+      <CardHeader>
+        <div class="flex items-center gap-2">
+          <KeyRound class="h-5 w-5 text-muted-foreground" />
+          <CardTitle class="text-xl">Enter access code</CardTitle>
+        </div>
+        <CardDescription>You need an access code to browse files.</CardDescription>
+      </CardHeader>
 
-    <section v-if="activeCodes.length" class="active-codes">
-      <h2>Active access codes</h2>
-      <ul>
-        <li v-for="detail in activeCodes" :key="detail.code" class="code-item">
-          <code class="code-value">{{ detail.code }}</code>
-          <span v-if="detail.nick" class="code-nick">{{ detail.nick }}</span>
-        </li>
-      </ul>
-    </section>
+      <CardContent>
+        <form @submit.prevent="activate" class="flex gap-2">
+          <Input
+            v-model="codeInput"
+            type="text"
+            placeholder="Access code"
+            autocomplete="off"
+            autofocus
+            :disabled="submitting"
+            class="flex-1"
+          />
+          <Button type="submit" :disabled="submitting || !codeInput.trim()">
+            {{ submitting ? 'Activating…' : 'Activate' }}
+          </Button>
+        </form>
+
+        <p v-if="error" class="mt-3 text-sm text-destructive flex items-center gap-1.5">
+          {{ error }}
+        </p>
+      </CardContent>
+
+      <template v-if="activeCodes.length">
+        <Separator />
+        <CardFooter class="flex-col items-start gap-3 pt-4">
+          <p class="text-sm text-muted-foreground font-medium">Active access codes</p>
+          <ul class="flex flex-col gap-2 w-full">
+            <li
+              v-for="detail in activeCodes"
+              :key="detail.code"
+              class="flex items-center justify-between gap-2 rounded-md border bg-muted/40 px-3 py-2"
+            >
+              <div class="flex items-center gap-2 min-w-0">
+                <code class="font-mono text-sm truncate">{{ detail.code }}</code>
+                <Badge v-if="detail.nick" variant="secondary" class="shrink-0">{{ detail.nick }}</Badge>
+              </div>
+              <Button
+                v-if="clipboardSupported"
+                variant="ghost"
+                size="icon"
+                class="h-7 w-7 shrink-0"
+                type="button"
+                :aria-label="`Copy code ${detail.code}`"
+                @click="copy(detail.code)"
+              >
+                <Check v-if="copied" class="h-3.5 w-3.5 text-green-500" />
+                <Copy v-else class="h-3.5 w-3.5" />
+              </Button>
+            </li>
+          </ul>
+        </CardFooter>
+      </template>
+    </Card>
   </div>
 </template>
-
-<style scoped>
-.access-page {
-  max-width: 400px;
-  margin: 2rem auto;
-}
-
-h1 {
-  font-size: 1.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.hint {
-  color: #6c757d;
-  margin-bottom: 1.5rem;
-}
-
-.access-form {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.code-input {
-  flex: 1;
-  padding: 0.5rem 0.75rem;
-  font-size: 1rem;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  outline: none;
-}
-
-.code-input:focus {
-  border-color: #0d6efd;
-  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
-}
-
-.submit-btn {
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  background: #0d6efd;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.submit-btn:disabled {
-  background: #6c757d;
-  cursor: not-allowed;
-}
-
-.submit-btn:not(:disabled):hover {
-  background: #0b5ed7;
-}
-
-.error {
-  margin-top: 0.75rem;
-  color: #dc3545;
-}
-
-.active-codes {
-  margin-top: 2rem;
-}
-
-.active-codes h2 {
-  font-size: 1rem;
-  color: #6c757d;
-  margin-bottom: 0.75rem;
-}
-
-.active-codes ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.code-item {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.4rem 0.6rem;
-  background: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
-}
-
-.code-value {
-  font-family: monospace;
-  font-size: 0.9rem;
-  color: #212529;
-}
-
-.code-nick {
-  font-size: 0.85rem;
-  color: #6c757d;
-}
-</style>

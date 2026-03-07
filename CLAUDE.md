@@ -15,7 +15,7 @@
 | ORM | SQLAlchemy 2.0+ |
 | Migrations | Alembic (auto-applied on startup) |
 | Database | SQLite |
-| Frontend | Vue.js 3 + Vite |
+| Frontend | Vue.js 3 + Vite + Tailwind CSS v4 + shadcn-vue |
 | Package manager | uv |
 | Formatter / linter | Ruff (line length: 120) |
 | Type checker | ty |
@@ -32,10 +32,17 @@ sharetree/
 │   └── verify              # Run ruff format, ruff check --fix, ty check
 ├── docker/
 │   └── entrypoint.sh       # Container startup: Caddy mode or direct app mode
-├── frontend/               # Vue.js 3 SPA (Vite)
+├── frontend/               # Vue.js 3 SPA (Vite + Tailwind CSS v4 + shadcn-vue)
 │   └── src/
+│       ├── assets/         # index.css — Tailwind entry + shadcn design tokens
+│       ├── lib/            # utils.js — cn() class merging helper
 │       ├── views/          # AccessView.vue, BrowseView.vue
-│       └── components/     # Breadcrumbs.vue, EntryList.vue
+│       └── components/
+│           ├── ui/         # shadcn-vue primitives: Button, Input, Card, Badge, Skeleton, Breadcrumb, Separator
+│           ├── FileIcon.vue     # File-type icon mapper (lucide-vue-next)
+│           ├── ThemeToggle.vue  # Dark/light mode toggle (@vueuse/core)
+│           ├── Breadcrumbs.vue  # Navigation breadcrumbs
+│           └── EntryList.vue    # Directory listing with search filter
 ├── migrations/             # Alembic versioned migrations
 │   └── versions/0001_initial_schema.py
 ├── src/sharetree/
