@@ -1,44 +1,37 @@
 # sharetree
 
-File sharing with
+File sharing via access codes. Administrators share server-side folder trees with external users using short-lived access codes that map to `fnmatch`-style glob patterns.
 
 ## Dev
 
-Techstack: Python/sqla/fastapi/sqlite/vue
+Tech stack: Python / FastAPI / SQLAlchemy / SQLite / Vue.js 3 / Vite
 
-* Create venv and install deps
-    ```sh
-    make venv
-    verify  # fmt/lint/typing
-    pytest
-    sharetree
-    ```
+```sh
+make check       # installs .venv, runs ruff + ty + pytest
+make frontend    # build Vue.js frontend
+sharetree        # start dev server on :8000
+```
 
+See [CLAUDE.md](CLAUDE.md) for full developer documentation.
 
-# Featureset
+## Featureset
 
-- [ ] Share existing folder tree
-    - [ ] No upload function
-- [ ] Admin side
-    - [ ] Auth based on either of
-        - [ ] trusted headers admins group enabled through env
-        - [ ] magic user/pass from env
-        - [ ] IP subnet range
-    - [ ] Custom forward auth api
-    - [ ] File and folder access granting api
-- [ ] User side
-    - [ ] Trade access code for session access
-    - [ ] View accessible files api
+- [x] Share existing folder tree (read-only, no upload)
+- [x] Access code system — trade code for session access
+  - [x] fnmatch glob pattern-based file/folder visibility
+  - [x] File download with access control
+- [x] Vue.js frontend — browse files, activate access codes
+- [x] Admin API — create access codes with patterns and optional label
+- [ ] Admin authentication (trusted headers / magic credentials / IP subnet)
+- [ ] Custom forward-auth API endpoint
+- [ ] File upload
 
+## Deploy
 
-# Deploy
+- [ ] Docker (Python app)
+  - [ ] Option to bundle Caddy with forward-auth
+- [ ] Redis session store
 
-- [ ] Deploy as docker
-    - [ ] Python app
-    - [ ] Option to also run Caddy serve with forward auth
-- [ ] Redis?
-
-
-# Refs
+## Refs
 
 - https://medium.com/@aahana.khanal11/scaling-a-fastapi-application-handling-multiple-requests-at-once-e5c128720c95
