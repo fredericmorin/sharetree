@@ -26,6 +26,8 @@ See [CLAUDE.md](CLAUDE.md) for full developer documentation.
   - [x] Loading skeletons, file-type icons, search/filter, copy-to-clipboard
 - [x] Admin API — create access codes with patterns and optional label
 - [x] Admin authentication — session login page (password) or trusted headers (reverse proxy)
+- [x] Session tracking — records which user session first claimed each access code
+  - [x] Admin page to browse claims grouped by session with pagination
 - [ ] Custom forward-auth API endpoint
 ## Deploy
 

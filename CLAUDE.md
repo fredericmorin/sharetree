@@ -36,7 +36,7 @@ sharetree/
 │   └── src/
 │       ├── assets/         # index.css — Tailwind entry + shadcn design tokens
 │       ├── lib/            # utils.js — cn() class merging helper
-│       ├── views/          # AccessView.vue, AdminLoginView.vue, BrowseView.vue
+│       ├── views/          # AccessView.vue, AdminLoginView.vue, AdminView.vue, AdminSessionsView.vue, BrowseView.vue
 │       └── components/
 │           ├── ui/         # shadcn-vue primitives: Button, Input, Card, Badge, Skeleton, Breadcrumb, Separator
 │           ├── FileIcon.vue     # File-type icon mapper (lucide-vue-next)
@@ -45,6 +45,7 @@ sharetree/
 │           └── EntryList.vue    # Directory listing with search filter
 ├── migrations/             # Alembic versioned migrations
 │   └── versions/0001_initial_schema.py
+│   └── versions/0002_add_session_id_to_access_codes.py
 ├── src/sharetree/
 │   ├── __main__.py         # CLI entry point; starts uvicorn on :8000
 │   ├── app.py              # FastAPI app, middleware, router registration
@@ -56,7 +57,7 @@ sharetree/
 │   │   ├── access.py       # GET/POST /api/v1/access*
 │   │   ├── browse.py       # GET /api/v1/browse[/{path}]
 │   │   ├── download.py     # GET /download/{path}
-│   │   └── admin/access.py # POST /api/v1/admin/access/create
+│   │   └── admin/access.py # POST /api/v1/admin/access/create, GET /api/v1/admin/access/sessions
 │   │       admin/auth.py   # POST /api/v1/admin/login|logout, GET /api/v1/admin/me
 │   │       admin/deps.py   # require_admin_group dependency (session or header)
 │   └── services/
@@ -154,6 +155,7 @@ Base prefix: `/api/v1`
 | POST | `/admin/logout` | Clear admin session |
 | GET | `/admin/me` | Return current admin auth status (disabled when `TRUST_HEADERS=true`) |
 | POST | `/admin/access/create` | Creates a new access code with given patterns |
+| GET | `/admin/access/sessions` | Lists access codes grouped by session, paginated (200/page) |
 | GET | `/download/{path}` | Downloads a file (access-controlled) |
 
 Admin endpoints under `/api/v1/admin/` (except login/logout/me) require admin access. When `TRUST_HEADERS=false` (default), log in via `POST /api/v1/admin/login` with the configured `ADMIN_PASSWORD`. When `TRUST_HEADERS=true`, the upstream proxy must forward `Remote-Groups: admins`.
@@ -170,6 +172,7 @@ Admin endpoints under `/api/v1/admin/` (except login/logout/me) require admin ac
 | `code` | `str` (PK) | URL-safe token (`secrets.token_urlsafe(16)`) |
 | `_patterns_json` | `str` | JSON-encoded list of `fnmatch` glob patterns; exposed via `patterns` property |
 | `nick` | `str \| None` | Optional human-readable label |
+| `session_id` | `str \| None` | UUID of the first user session that activated this code (indexed) |
 
 ## Security Model
 
