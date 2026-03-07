@@ -44,8 +44,8 @@ class AccessCodeRequest(BaseModel):
     code: str
 
 
-@router.post("/activate")
-async def activate_access_code(body: AccessCodeRequest, request: Request, response: Response) -> ResponseModel:
+@router.post("/activate", response_model=ResponseModel[None])
+async def activate_access_code(body: AccessCodeRequest, request: Request, response: Response) -> ResponseModel[None]:
     previous_codes: list[str] = request.session.get("access_codes", [])
 
     valid_codes = access_service.prune_invalid_access_codes([body.code, *previous_codes])

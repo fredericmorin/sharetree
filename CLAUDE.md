@@ -124,7 +124,11 @@ API route (api/) → Service function (services/) → Database (db.py / models/)
 - **Response standardization:** `apiexception` library (registered in `app.py`) normalizes all responses. Raise `HTTPException` with appropriate status codes.
 - **Type hints:** Use Python 3.10+ union syntax (`str | None`, not `Optional[str]`).
 - **SQLAlchemy:** Use `Mapped`/`mapped_column` style and `get_session()` context manager from `db.py`.
-- **Pydantic:** Use `pydantic.BaseModel` for request/response bodies in route signatures.
+- **Pydantic — required for all endpoints:** Every API endpoint **must** use:
+  - A `pydantic.BaseModel` subclass for structured request bodies (already enforced by FastAPI for POST/PUT).
+  - A `pydantic.BaseModel` subclass as the return type annotation **and** as the `response_model=` argument on the route decorator — never plain `dict` or unparameterized generics.
+  - Service functions that feed into API responses should return typed Pydantic models (e.g. `list[DirectoryEntry]`), not `list[dict]` or `list[dict[str, Any]]`.
+  - Generic response wrappers such as `ResponseModel` must be fully parameterized (e.g. `ResponseModel[MyData]` or `ResponseModel[None]`), never bare `ResponseModel`.
 
 ## API Reference
 
