@@ -1,55 +1,41 @@
+<script setup>
+import { RouterLink, RouterView } from 'vue-router'
+import ThemeToggle from '@/components/ThemeToggle.vue'
+import { Share2 } from 'lucide-vue-next'
+</script>
+
 <template>
-  <div id="app-root">
-    <header>
-      <RouterLink to="/" class="brand">sharetree</RouterLink>
+  <div class="min-h-screen bg-background text-foreground">
+    <header class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div class="mx-auto max-w-4xl px-4 sm:px-6">
+        <div class="flex h-14 items-center justify-between">
+          <RouterLink to="/" class="flex items-center gap-2 font-semibold text-foreground hover:text-foreground/80 transition-colors no-underline">
+            <Share2 class="h-5 w-5" />
+            <span>sharetree</span>
+          </RouterLink>
+          <ThemeToggle />
+        </div>
+      </div>
     </header>
-    <main>
-      <RouterView />
+
+    <main class="mx-auto max-w-4xl px-4 sm:px-6 py-8">
+      <RouterView v-slot="{ Component }">
+        <Transition name="fade" mode="out-in">
+          <component :is="Component" />
+        </Transition>
+      </RouterView>
     </main>
   </div>
 </template>
 
 <style>
-*, *::before, *::after {
-  box-sizing: border-box;
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.15s ease;
 }
 
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
-  background: #f8f9fa;
-  color: #212529;
-}
-
-#app-root {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 0 1rem;
-}
-
-header {
-  padding: 1rem 0;
-  border-bottom: 1px solid #dee2e6;
-  margin-bottom: 1.5rem;
-}
-
-.brand {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #212529;
-  text-decoration: none;
-}
-
-.brand:hover {
-  color: #0d6efd;
-}
-
-a {
-  color: #0d6efd;
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

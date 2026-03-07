@@ -1,5 +1,13 @@
 <script setup>
 import { computed } from 'vue'
+import { RouterLink } from 'vue-router'
+import Breadcrumb from '@/components/ui/breadcrumb/index.vue'
+import BreadcrumbList from '@/components/ui/breadcrumb/BreadcrumbList.vue'
+import BreadcrumbItem from '@/components/ui/breadcrumb/BreadcrumbItem.vue'
+import BreadcrumbLink from '@/components/ui/breadcrumb/BreadcrumbLink.vue'
+import BreadcrumbPage from '@/components/ui/breadcrumb/BreadcrumbPage.vue'
+import BreadcrumbSeparator from '@/components/ui/breadcrumb/BreadcrumbSeparator.vue'
+import { House } from 'lucide-vue-next'
 
 const props = defineProps({
   path: { type: String, default: '' },
@@ -15,35 +23,27 @@ const segments = computed(() => {
 </script>
 
 <template>
-  <nav class="breadcrumbs" aria-label="breadcrumb">
-    <RouterLink to="/" class="crumb">Home</RouterLink>
-    <template v-for="seg in segments" :key="seg.to">
-      <span class="sep">/</span>
-      <RouterLink :to="seg.to" class="crumb">{{ seg.label }}</RouterLink>
-    </template>
-  </nav>
+  <Breadcrumb>
+    <BreadcrumbList>
+      <BreadcrumbItem>
+        <BreadcrumbLink as-child>
+          <RouterLink to="/" class="flex items-center text-muted-foreground hover:text-foreground transition-colors no-underline">
+            <House class="h-4 w-4" />
+          </RouterLink>
+        </BreadcrumbLink>
+      </BreadcrumbItem>
+
+      <template v-for="(seg, i) in segments" :key="seg.to">
+        <BreadcrumbSeparator />
+        <BreadcrumbItem>
+          <BreadcrumbPage v-if="i === segments.length - 1">{{ seg.label }}</BreadcrumbPage>
+          <BreadcrumbLink v-else as-child>
+            <RouterLink :to="seg.to" class="text-muted-foreground hover:text-foreground transition-colors no-underline">
+              {{ seg.label }}
+            </RouterLink>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+      </template>
+    </BreadcrumbList>
+  </Breadcrumb>
 </template>
-
-<style scoped>
-.breadcrumbs {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
-  color: #6c757d;
-}
-
-.crumb {
-  color: #0d6efd;
-}
-
-.crumb:last-child {
-  color: #212529;
-  pointer-events: none;
-}
-
-.sep {
-  color: #6c757d;
-}
-</style>

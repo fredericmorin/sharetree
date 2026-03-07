@@ -4,7 +4,7 @@ File sharing via access codes. Administrators share server-side folder trees wit
 
 ## Dev
 
-Tech stack: Python / FastAPI / SQLAlchemy / SQLite / Vue.js 3 / Vite
+Tech stack: Python / FastAPI / SQLAlchemy / SQLite / Vue.js 3 / Vite / Tailwind CSS v4 / shadcn-vue
 
 ```sh
 make check       # installs .venv, runs ruff + ty + pytest
@@ -21,6 +21,9 @@ See [CLAUDE.md](CLAUDE.md) for full developer documentation.
   - [x] fnmatch glob pattern-based file/folder visibility
   - [x] File download with access control
 - [x] Vue.js frontend — browse files, activate access codes
+  - [x] Tailwind CSS v4 + shadcn-vue design system
+  - [x] Dark/light mode toggle
+  - [x] Loading skeletons, file-type icons, search/filter, copy-to-clipboard
 - [x] Admin API — create access codes with patterns and optional label
 - [ ] Admin authentication (trusted headers / magic credentials / IP subnet)
 - [ ] Custom forward-auth API endpoint
