@@ -9,17 +9,30 @@ from sharetree.models.all import AccessCode
 router = APIRouter(prefix="/access")
 
 
+class ActiveCodeDetail(TypedDict):
+    code: str
+    nick: str | None
+
+
 class ActiveAccessCodes(TypedDict):
     valid_active_codes: list[str]
     accessible_paths: list[str]
+    active_code_details: list[ActiveCodeDetail]
 
 
 def resolve_access_code_paths(access_codes: list[str]) -> ActiveAccessCodes:
     with get_session() as session:
         rows = session.query(AccessCode).filter(AccessCode.code.in_(access_codes)).all()
-    valid_codes = {row.code: row.patterns for row in rows}
-    paths = set().union(*list(valid_codes.values())) if valid_codes else set()
-    return ActiveAccessCodes(valid_active_codes=list(valid_codes.keys()), accessible_paths=list(paths))
+    all_paths: set[str] = set()
+    details: list[ActiveCodeDetail] = []
+    for row in rows:
+        all_paths.update(row.patterns)
+        details.append(ActiveCodeDetail(code=row.code, nick=row.nick))
+    return ActiveAccessCodes(
+        valid_active_codes=[row.code for row in rows],
+        accessible_paths=list(all_paths),
+        active_code_details=details,
+    )
 
 
 def prune_invalid_access_codes(access_codes: list[str]) -> list[str]:

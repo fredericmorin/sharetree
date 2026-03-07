@@ -7,9 +7,15 @@ from sharetree.services import access as access_service
 router = APIRouter(prefix="/access")
 
 
+class ActiveCodeDetail(BaseModel):
+    code: str
+    nick: str | None
+
+
 class AccessCodesResponse(BaseModel):
     active_codes: list[str]
     paths: list[str]
+    active_code_details: list[ActiveCodeDetail]
 
 
 @router.get(
@@ -23,6 +29,9 @@ async def get_access_code(request: Request) -> ResponseModel[AccessCodesResponse
         data=AccessCodesResponse.model_construct(
             active_codes=active_access_codes["valid_active_codes"],
             paths=active_access_codes["accessible_paths"],
+            active_code_details=[
+                ActiveCodeDetail(code=d["code"], nick=d["nick"]) for d in active_access_codes["active_code_details"]
+            ],
         )
     )
 
