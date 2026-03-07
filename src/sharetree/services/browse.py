@@ -1,10 +1,18 @@
 import fnmatch
 from pathlib import Path
-from typing import Any
+from typing import Literal
 
 from fastapi import HTTPException
+from pydantic import BaseModel
 
 from sharetree.settings import settings
+
+
+class DirectoryEntry(BaseModel):
+    name: str
+    type: Literal["file", "directory"]
+    size: int | None
+    path: str
 
 
 def _is_accessible(rel_path: str, patterns: list[str]) -> bool:
@@ -55,7 +63,7 @@ def get_file_path(path: str, patterns: list[str]) -> Path:
     return target
 
 
-def list_directory_entries(path: str, patterns: list[str]) -> list[dict[str, Any]]:
+def list_directory_entries(path: str, patterns: list[str]) -> list[DirectoryEntry]:
     target, norm_path = _resolve_path(path, patterns)
 
     folder_matched = _is_accessible(norm_path, patterns)
@@ -70,12 +78,12 @@ def list_directory_entries(path: str, patterns: list[str]) -> list[dict[str, Any
         raise HTTPException(status_code=400, detail="Path is not a directory")
 
     entries = [
-        {
-            "name": entry.name,
-            "type": "directory" if entry.is_dir() else "file",
-            "size": entry.stat().st_size if entry.is_file() else None,
-            "path": f"/{path}/{entry.name}".replace("//", "/"),
-        }
+        DirectoryEntry(
+            name=entry.name,
+            type="directory" if entry.is_dir() else "file",
+            size=entry.stat().st_size if entry.is_file() else None,
+            path=f"/{path}/{entry.name}".replace("//", "/"),
+        )
         for entry in sorted(target.iterdir(), key=lambda e: (e.is_file(), e.name))
         if folder_matched or _entry_is_visible(f"/{path}/{entry.name}".replace("//", "/"), entry.is_dir(), patterns)
     ]

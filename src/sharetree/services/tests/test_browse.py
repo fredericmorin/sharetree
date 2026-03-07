@@ -55,7 +55,7 @@ def patch_share_root(root: Path):
 
 
 def names(entries: list) -> list[str]:
-    return [e["name"] for e in entries]
+    return [e.name for e in entries]
 
 
 def http_exc(fn, *args, **kwargs) -> HTTPException:
