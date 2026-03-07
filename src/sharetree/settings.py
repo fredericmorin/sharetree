@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     SESSION_SECRET: str
     SHARE_ROOT: Path = Path("files")
     DATA_PATH: Path = Path("data")
+    ADMIN_GROUPS: list[str] = []
 
 
 @lru_cache
