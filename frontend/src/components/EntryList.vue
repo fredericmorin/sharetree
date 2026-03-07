@@ -21,7 +21,7 @@ function formatSize(bytes) {
       </template>
       <template v-else>
         <span class="icon">📄</span>
-        <span class="entry-name file">{{ entry.name }}</span>
+        <a :href="'/download' + entry.path" class="entry-name file" download>{{ entry.name }}</a>
         <span class="size">{{ formatSize(entry.size) }}</span>
       </template>
     </li>
