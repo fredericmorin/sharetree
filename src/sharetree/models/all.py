@@ -11,6 +11,7 @@ class AccessCode(Base):
     code: Mapped[str] = mapped_column(primary_key=True)
     _patterns_json: Mapped[str] = mapped_column(name="patterns")
     nick: Mapped[str | None]
+    session_id: Mapped[str | None] = mapped_column(index=True, default=None)
 
     @property
     def patterns(self) -> list[str]:

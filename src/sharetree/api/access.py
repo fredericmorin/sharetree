@@ -1,3 +1,5 @@
+import uuid
+
 from api_exception import APIException, BaseExceptionCode, ResponseModel
 from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel
@@ -44,6 +46,12 @@ class AccessCodeRequest(BaseModel):
     code: str
 
 
+def _get_or_create_session_id(request: Request) -> str:
+    if "session_id" not in request.session:
+        request.session["session_id"] = str(uuid.uuid4())
+    return request.session["session_id"]
+
+
 @router.post("/activate", response_model=ResponseModel[None])
 async def activate_access_code(body: AccessCodeRequest, request: Request, response: Response) -> ResponseModel[None]:
     previous_codes: list[str] = request.session.get("access_codes", [])
@@ -57,5 +65,7 @@ async def activate_access_code(body: AccessCodeRequest, request: Request, respon
 
     if body.code in previous_codes:
         return ResponseModel(error_code="ALREADY_ACTIVE")
-    else:
-        return ResponseModel()
+
+    session_id = _get_or_create_session_id(request)
+    access_service.set_access_code_session(body.code, session_id)
+    return ResponseModel()
