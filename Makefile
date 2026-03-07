@@ -32,6 +32,10 @@ check: .venv/install
 clean:
 	rm -rf .venv
 
+.PHONY: docker-build
+docker-build:
+	docker build -t sharetree .
+
 .PHONY: upgrade
 upgrade: .venv/bin/uv
 	.venv/bin/uv lock --upgrade
