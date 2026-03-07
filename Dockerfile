@@ -12,7 +12,7 @@ RUN npm run build
 FROM python:3.13-slim AS python-builder
 WORKDIR /app
 RUN pip install --no-cache-dir uv
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml uv.lock README.md ./
 COPY src/ src/
 RUN uv sync --no-dev --compile-bytecode
 
