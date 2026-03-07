@@ -23,12 +23,14 @@ class ActiveAccessCodes(TypedDict):
 def resolve_access_code_paths(access_codes: list[str]) -> ActiveAccessCodes:
     with get_session() as session:
         rows = session.query(AccessCode).filter(AccessCode.code.in_(access_codes)).all()
-    valid_codes = {row.code: {"patterns": row.patterns, "nick": row.nick} for row in rows}
-    paths = set().union(*[v["patterns"] for v in valid_codes.values()]) if valid_codes else set()
-    details = [ActiveCodeDetail(code=code, nick=info["nick"]) for code, info in valid_codes.items()]
+    all_paths: set[str] = set()
+    details: list[ActiveCodeDetail] = []
+    for row in rows:
+        all_paths.update(row.patterns)
+        details.append(ActiveCodeDetail(code=row.code, nick=row.nick))
     return ActiveAccessCodes(
-        valid_active_codes=list(valid_codes.keys()),
-        accessible_paths=list(paths),
+        valid_active_codes=[row.code for row in rows],
+        accessible_paths=list(all_paths),
         active_code_details=details,
     )
 
