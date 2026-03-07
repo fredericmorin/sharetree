@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     SESSION_SECRET: str
     SHARE_ROOT: Path = Path("files")
     DATA_PATH: Path = Path("data")
+    TRUST_HEADERS: bool = False
 
 
 @lru_cache

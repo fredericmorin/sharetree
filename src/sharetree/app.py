@@ -2,13 +2,14 @@ from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
 from api_exception import register_exception_handlers
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, Depends, FastAPI
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from sharetree.settings import settings
 from sharetree.api.access import router as access_router
 from sharetree.api.admin.access import router as admin_access_router
+from sharetree.api.admin.deps import require_admin_group
 from sharetree.api.browse import router as browse_router
 from sharetree.api.download import router as download_router
 from sharetree.api.health import router as health_router
@@ -30,7 +31,7 @@ api.include_router(health_router)
 api.include_router(access_router)
 api.include_router(browse_router)
 
-admin = APIRouter(prefix="/admin")
+admin = APIRouter(prefix="/admin", dependencies=[Depends(require_admin_group)])
 admin.include_router(admin_access_router)
 api.include_router(admin)
 
