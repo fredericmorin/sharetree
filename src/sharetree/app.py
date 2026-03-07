@@ -38,9 +38,4 @@ app.include_router(api)
 app.include_router(download_router)
 
 
-@app.get("/")
-async def root() -> str:
-    return "sup"
-
-
-app.mount("/", StaticFiles(directory="static"), name="static")
+app.mount("/", StaticFiles(directory="static", html=True), name="static")

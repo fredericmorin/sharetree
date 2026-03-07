@@ -1,4 +1,15 @@
 
+.PHONY: frontend
+frontend:
+	cd frontend && npm install && npm run build
+
+static/index.html:
+	cd frontend && npm install && npm run build
+
+.PHONY: run
+run: .venv/install static/index.html
+	.venv/bin/sharetree
+
 .PHONY: check
 check: .venv/install
 	.venv/bin/uv run ruff format
@@ -20,10 +31,6 @@ check: .venv/install
 .PHONY: clean
 clean:
 	rm -rf .venv
-
-.PHONY: run
-run: .venv/install
-	.venv/bin/sharetree
 
 .PHONY: upgrade
 upgrade: .venv/bin/uv

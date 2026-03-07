@@ -3,3 +3,6 @@
 __pycache__
 /data
 /files
+/frontend/node_modules
+/static/index.html
+/static/assets
