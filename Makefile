@@ -1,7 +1,11 @@
 
 .PHONY: dev
 dev:
-	docker compose -f docker-compose.dev.yml up
+	docker compose -f docker-compose.dev.yml up --detach
+	@echo "Waiting for API to be ready..."
+	@until curl -sf http://localhost:8000/api/v1/health > /dev/null 2>&1; do sleep 1; done
+	@xdg-open http://localhost:8000 2>/dev/null || open http://localhost:8000 2>/dev/null || true
+	docker compose -f docker-compose.dev.yml logs --follow
 
 .PHONY: frontend
 frontend:
