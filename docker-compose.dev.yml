@@ -26,7 +26,13 @@ services:
     volumes:
       - .:/app
       - node_modules:/app/frontend/node_modules
-    command: sh -c "cd frontend && npm install && npm run build -- --watch"
+    entrypoint: ["/bin/sh","-c"]
+    command:
+      - |
+        set -ex
+        cd frontend
+        npm install
+        npm run build -- --watch
 
 volumes:
   venv:
