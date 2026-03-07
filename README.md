@@ -38,9 +38,10 @@ See [CLAUDE.md](CLAUDE.md) for full developer documentation.
 docker build -t sharetree .
 ```
 
-#### Docker Compose
+#### Standalone mode (Caddy + basic auth on admin routes)
 
-Create a `docker-compose.yml`:
+Listens on **port 80**. Admin routes (`/api/v1/admin/*`) require HTTP basic auth.
+The authenticated user's groups are forwarded to the app as a trusted header.
 
 ```yaml
 services:
@@ -62,40 +63,33 @@ volumes:
   sharetree-files:
 ```
 
-```sh
-docker compose up -d
-```
-
-For trusted-headers mode, replace the port with `8000:8000`, remove `SHARETREE_ADMIN_PASSWORD`, and add `SHARETREE_TRUST_HEADERS: "true"`.
-
-#### Standalone mode (Caddy + basic auth on admin routes)
-
-Listens on **port 80**. Admin routes (`/api/v1/admin/*`) require HTTP basic auth.
-The authenticated user's groups are forwarded to the app as a trusted header.
-
-```sh
-docker run -d \
-  -p 80:80 \
-  -v sharetree-data:/data \
-  -v sharetree-files:/files \
-  -e SHARETREE_SESSION_SECRET=<random-secret> \
-  -e SHARETREE_ADMIN_PASSWORD=<admin-password> \
-  sharetree
-```
-
 #### Trusted-headers mode (behind an existing reverse proxy)
 
 Listens on **port 8000**. Admin access is controlled by the `Remote-Groups: admins` header
 forwarded by your upstream proxy. Set `SHARETREE_TRUST_HEADERS=true` to enable header validation.
 
+```yaml
+services:
+  sharetree:
+    image: sharetree
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - sharetree-data:/data
+      - sharetree-files:/files
+    environment:
+      SHARETREE_SESSION_SECRET: <random-secret>
+      SHARETREE_TRUST_HEADERS: "true"
+    restart: unless-stopped
+
+volumes:
+  sharetree-data:
+  sharetree-files:
+```
+
 ```sh
-docker run -d \
-  -p 8000:8000 \
-  -v sharetree-data:/data \
-  -v sharetree-files:/files \
-  -e SHARETREE_SESSION_SECRET=<random-secret> \
-  -e SHARETREE_TRUST_HEADERS=true \
-  sharetree
+docker compose up -d
 ```
 
 #### Environment variables
