@@ -38,6 +38,36 @@ See [CLAUDE.md](CLAUDE.md) for full developer documentation.
 docker build -t sharetree .
 ```
 
+#### Docker Compose
+
+Create a `docker-compose.yml`:
+
+```yaml
+services:
+  sharetree:
+    image: sharetree
+    build: .
+    ports:
+      - "80:80"
+    volumes:
+      - sharetree-data:/data
+      - sharetree-files:/files
+    environment:
+      SHARETREE_SESSION_SECRET: <random-secret>
+      SHARETREE_ADMIN_PASSWORD: <admin-password>
+    restart: unless-stopped
+
+volumes:
+  sharetree-data:
+  sharetree-files:
+```
+
+```sh
+docker compose up -d
+```
+
+For trusted-headers mode, replace the port with `8000:8000`, remove `SHARETREE_ADMIN_PASSWORD`, and add `SHARETREE_TRUST_HEADERS: "true"`.
+
 #### Standalone mode (Caddy + basic auth on admin routes)
 
 Listens on **port 80**. Admin routes (`/api/v1/admin/*`) require HTTP basic auth.
