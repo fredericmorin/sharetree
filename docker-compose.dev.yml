@@ -11,7 +11,7 @@ services:
       SHARETREE_SHARE_ROOT: /app/files
       SHARETREE_DATA_PATH: /app/data
     command: >
-      sh -c "pip install uv -q && uv sync -q && python -m sharetree"
+      sh -c "pip install uv -q && uv sync -q && .venv/bin/python -m sharetree"
     ports:
       - "8000:8000"
 
