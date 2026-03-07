@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     SHARE_ROOT: Path = Path("files")
     DATA_PATH: Path = Path("data")
     TRUST_HEADERS: bool = False
+    ADMIN_PASSWORD: str | None = None
     DEV: bool = True
 
 
