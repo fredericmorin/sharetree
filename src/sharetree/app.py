@@ -10,6 +10,7 @@ from sharetree.settings import settings
 from sharetree.api.access import router as access_router
 from sharetree.api.admin.access import router as admin_access_router
 from sharetree.api.browse import router as browse_router
+from sharetree.api.download import router as download_router
 from sharetree.api.health import router as health_router
 from sharetree.db import run_migrations
 
@@ -34,6 +35,7 @@ admin.include_router(admin_access_router)
 api.include_router(admin)
 
 app.include_router(api)
+app.include_router(download_router)
 
 
 @app.get("/")

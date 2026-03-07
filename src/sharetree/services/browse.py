@@ -1,4 +1,5 @@
 import fnmatch
+from pathlib import Path
 from typing import Any
 
 from fastapi import HTTPException
@@ -26,7 +27,7 @@ def _entry_is_visible(entry_path: str, is_dir: bool, patterns: list[str]) -> boo
     return False
 
 
-def list_directory_entries(path: str, patterns: list[str]) -> list[dict[str, Any]]:
+def _resolve_path(path: str, patterns: list[str]) -> tuple[Path, str]:
     if not patterns:
         raise HTTPException(status_code=403, detail="Access denied")
 
@@ -36,6 +37,27 @@ def list_directory_entries(path: str, patterns: list[str]) -> list[dict[str, Any
         raise HTTPException(status_code=403, detail="Access denied")
 
     norm_path = ("/" + path).replace("//", "/")
+    return target, norm_path
+
+
+def get_file_path(path: str, patterns: list[str]) -> Path:
+    target, norm_path = _resolve_path(path, patterns)
+
+    if not _is_accessible(norm_path, patterns):
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    if not target.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+
+    if not target.is_file():
+        raise HTTPException(status_code=400, detail="Path is not a file")
+
+    return target
+
+
+def list_directory_entries(path: str, patterns: list[str]) -> list[dict[str, Any]]:
+    target, norm_path = _resolve_path(path, patterns)
+
     folder_matched = _is_accessible(norm_path, patterns)
 
     if not folder_matched and not _dir_is_accessible(path, patterns):
