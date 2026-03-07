@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
@@ -8,6 +8,18 @@ const router = useRouter()
 const codeInput = ref('')
 const error = ref(null)
 const submitting = ref(false)
+const activeCodes = ref([])
+
+async function fetchActiveCodes() {
+  try {
+    const res = await fetch('/api/v1/access', { credentials: 'same-origin' })
+    if (!res.ok) return
+    const data = await res.json()
+    activeCodes.value = data.data?.active_code_details ?? []
+  } catch {
+    // silently ignore
+  }
+}
 
 async function activate() {
   error.value = null
@@ -27,12 +39,16 @@ async function activate() {
       error.value = 'Activation failed. Please try again.'
       return
     }
+    codeInput.value = ''
+    await fetchActiveCodes()
     const next = route.query.next || '/'
     router.push(next)
   } finally {
     submitting.value = false
   }
 }
+
+onMounted(fetchActiveCodes)
 </script>
 
 <template>
@@ -54,6 +70,16 @@ async function activate() {
       </button>
     </form>
     <p v-if="error" class="error">{{ error }}</p>
+
+    <section v-if="activeCodes.length" class="active-codes">
+      <h2>Active access codes</h2>
+      <ul>
+        <li v-for="detail in activeCodes" :key="detail.code" class="code-item">
+          <code class="code-value">{{ detail.code }}</code>
+          <span v-if="detail.nick" class="code-nick">{{ detail.nick }}</span>
+        </li>
+      </ul>
+    </section>
   </div>
 </template>
 
@@ -114,5 +140,45 @@ h1 {
 .error {
   margin-top: 0.75rem;
   color: #dc3545;
+}
+
+.active-codes {
+  margin-top: 2rem;
+}
+
+.active-codes h2 {
+  font-size: 1rem;
+  color: #6c757d;
+  margin-bottom: 0.75rem;
+}
+
+.active-codes ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.code-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.6rem;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+}
+
+.code-value {
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: #212529;
+}
+
+.code-nick {
+  font-size: 0.85rem;
+  color: #6c757d;
 }
 </style>
