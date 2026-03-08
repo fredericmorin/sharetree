@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import RedirectResponse, Response
 
 from sharetree.settings import settings
 from sharetree.api.access import router as access_router
@@ -28,6 +28,22 @@ log = structlog.get_logger()
 
 _LOGGED_REQUEST_HEADERS = {"user-agent", "content-type", "content-length", "referer", "origin"}
 _LOGGED_RESPONSE_HEADERS = {"content-type", "content-length"}
+
+
+class TrailingSlashMiddleware(BaseHTTPMiddleware):
+    """Redirect paths with a trailing slash (except root) to the slash-free canonical URL.
+
+    Without this, StaticFiles(html=True) looks for e.g. static/browse/index.html when
+    the browser requests /browse/, finds nothing, and returns 404 instead of falling back
+    to static/index.html for the Vue SPA.
+    """
+
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+        path = request.url.path
+        if path != "/" and path.endswith("/"):
+            url = request.url.replace(path=path.rstrip("/"))
+            return RedirectResponse(url, status_code=301)
+        return await call_next(request)
 
 
 class LoggingMiddleware(BaseHTTPMiddleware):
@@ -70,8 +86,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(lifespan=lifespan)
-app.add_middleware(LoggingMiddleware)
-app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET)  # type: ignore
+app.add_middleware(LoggingMiddleware)  # type: ignore[arg-type]
+app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET)  # type: ignore[arg-type]
+app.add_middleware(TrailingSlashMiddleware)  # type: ignore[arg-type]
 register_exception_handlers(app)  # consistent error and success api responses
 
 api = APIRouter(prefix="/api/v1")
