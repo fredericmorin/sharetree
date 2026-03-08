@@ -1,0 +1,5 @@
+:80 {
+	reverse_proxy api:8000 {
+		header_up Remote-Groups admins
+	}
+}
