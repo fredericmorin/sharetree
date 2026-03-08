@@ -26,7 +26,9 @@
 
 ```
 sharetree/
-├── .github/workflows/python-app.yml  # CI: ruff + ty + pytest on push/PR
+├── .github/workflows/
+│   ├── python-app.yml  # CI: ruff + ty + pytest on push/PR
+│   └── docker-build.yml  # CI: Docker image build for PRs and releases
 ├── bin/
 │   ├── setup-dev-venv.sh   # Create + populate venv via uv
 │   └── verify              # Run ruff format, ruff check --fix, ty check
@@ -44,8 +46,9 @@ sharetree/
 │           ├── Breadcrumbs.vue  # Navigation breadcrumbs
 │           └── EntryList.vue    # Directory listing with search filter
 ├── migrations/             # Alembic versioned migrations
-│   └── versions/0001_initial_schema.py
-│   └── versions/0002_add_session_id_to_access_codes.py
+│   └── versions/
+│       ├── 0001_initial_schema.py
+│       └── 0002_add_session_id_to_access_codes.py
 ├── src/sharetree/
 │   ├── __main__.py         # CLI entry point; starts uvicorn on :8000
 │   ├── app.py              # FastAPI app, middleware, router registration
@@ -57,9 +60,12 @@ sharetree/
 │   │   ├── access.py       # GET/POST /api/v1/access*
 │   │   ├── browse.py       # GET /api/v1/browse[/{path}]
 │   │   ├── download.py     # GET /download/{path}
-│   │   └── admin/access.py # POST /api/v1/admin/access/create, GET /api/v1/admin/access/sessions
-│   │       admin/auth.py   # POST /api/v1/admin/login|logout, GET /api/v1/admin/me
-│   │       admin/deps.py   # require_admin_group dependency (session or header)
+│   │   └── admin/
+│   │       ├── access.py   # POST /api/v1/admin/access/create, GET /api/v1/admin/access/sessions
+│   │       ├── auth.py     # POST /api/v1/admin/login|logout, GET /api/v1/admin/me
+│   │       ├── deps.py     # require_admin_group dependency (session or header)
+│   │       └── tests/
+│   │           └── test_admin_auth.py  # Tests for both admin auth modes
 │   └── services/
 │       ├── access.py       # Business logic: create/validate access codes
 │       ├── browse.py       # Business logic: directory listing, file path resolution
@@ -70,6 +76,7 @@ sharetree/
 ├── .dockerignore
 ├── alembic.ini
 ├── conftest.py             # Sets SHARETREE_SESSION_SECRET for test runs
+├── docker-compose.dev.yml  # Dev compose: API + frontend watcher
 ├── Dockerfile              # Multi-stage build: frontend + Python
 ├── Makefile
 └── pyproject.toml
@@ -107,6 +114,7 @@ SHARETREE_DEV=true                         # optional, enables uvicorn auto-relo
 | Task | Command |
 |---|---|
 | Run dev server | `python -m sharetree` or `sharetree` |
+| Run full Docker dev stack | `make dev` (docker compose: API + frontend watcher) |
 | Build frontend | `make frontend` |
 | Format + lint + type-check | `bin/verify` |
 | Run full check suite | `make check` |
@@ -187,6 +195,11 @@ Admin endpoints under `/api/v1/admin/` (except login/logout/me) require admin ac
 - Use `pytest` with `tmp_path` for filesystem tests.
 - Mock `SHARE_ROOT` by patching `sharetree.services.browse.SHARE_ROOT`.
 - `conftest.py` at the repo root sets `SHARETREE_SESSION_SECRET` for all test runs.
+
+Test suites:
+- `src/sharetree/services/tests/test_browse.py` — `list_directory_entries()` and fnmatch pattern matching
+- `src/sharetree/services/tests/test_get_file_path.py` — `get_file_path()` access control and path traversal
+- `src/sharetree/api/admin/tests/test_admin_auth.py` — Admin auth for both session-based and header-based modes
 
 ## Code Style
 
