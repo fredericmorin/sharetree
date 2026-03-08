@@ -1,8 +1,8 @@
 name: Docker build
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  push:
+    branches: [master]
   release:
     types: [published]
 
@@ -13,9 +13,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: >
-      github.event_name == 'release' ||
-      (github.event_name == 'pull_request' && github.event.pull_request.user.login == 'fredericmorin')
 
     steps:
       - uses: actions/checkout@v4
@@ -33,7 +30,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=ref,event=pr
+            type=ref,event=branch
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
 
