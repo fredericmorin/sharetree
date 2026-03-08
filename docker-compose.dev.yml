@@ -1,4 +1,13 @@
 services:
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./docker/Caddyfile.dev:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - api
+
   api:
     image: python:3.13-slim
     working_dir: /app
@@ -11,7 +20,7 @@ services:
       SHARETREE_SESSION_SECRET: "${SHARETREE_SESSION_SECRET:-dev-secret-change-me}"
       SHARETREE_SHARE_ROOT: /app/files
       SHARETREE_DATA_PATH: /app/data
-      SHARETREE_ADMIN_PASSWORD: dev
+      SHARETREE_TRUST_HEADERS: "true"
     entrypoint: ["/bin/sh","-c"]
     command:
       - |
@@ -19,8 +28,6 @@ services:
         pip install uv
         uv sync
         .venv/bin/sharetree
-    ports:
-      - "8000:8000"
 
   frontend:
     image: node:22-slim
