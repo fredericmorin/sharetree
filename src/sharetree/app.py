@@ -1,11 +1,12 @@
 import time
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import AsyncIterator
 
 import structlog
 from api_exception import register_exception_handlers
 from fastapi import APIRouter, Depends, FastAPI
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
@@ -70,8 +71,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(lifespan=lifespan)
-app.add_middleware(LoggingMiddleware)
-app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET)  # type: ignore
+app.add_middleware(LoggingMiddleware)  # type: ignore[arg-type]
+app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET)  # type: ignore[arg-type]
 register_exception_handlers(app)  # consistent error and success api responses
 
 api = APIRouter(prefix="/api/v1")
@@ -88,5 +89,13 @@ api.include_router(admin)
 app.include_router(api)
 app.include_router(download_router)
 
+_STATIC_DIR = Path("static")
 
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
+
+@app.get("/{full_path:path}", include_in_schema=False)
+async def spa_fallback(full_path: str) -> FileResponse:
+    # Serve real static files (favicon, etc.) directly; fall back to index.html for SPA routes.
+    candidate = _STATIC_DIR / full_path
+    if candidate.is_file():
+        return FileResponse(candidate)
+    return FileResponse(_STATIC_DIR / "index.html")
