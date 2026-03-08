@@ -61,10 +61,14 @@ async def activate_access_code(body: AccessCodeRequest, request: Request, respon
     if body.code not in valid_codes:
         raise APIException(AccessCodeExceptionCode.ACCESS_CODE_NOT_FOUND, http_status_code=404)
 
-    request.session["access_codes"] = valid_codes
-
     if body.code in previous_codes:
+        request.session["access_codes"] = valid_codes
         return ResponseModel(error_code="ALREADY_ACTIVE")
+
+    if not access_service.is_access_code_unclaimed(body.code):
+        raise APIException(AccessCodeExceptionCode.ACCESS_CODE_NOT_FOUND, http_status_code=404)
+
+    request.session["access_codes"] = valid_codes
 
     session_id = _get_or_create_session_id(request)
     access_service.set_access_code_session(body.code, session_id)
