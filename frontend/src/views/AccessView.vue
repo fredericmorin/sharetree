@@ -26,7 +26,7 @@ const { copy, copied, isSupported: clipboardSupported } = useClipboard()
 
 async function fetchActiveCodes() {
   try {
-    const res = await fetch('/api/v1/access', { credentials: 'same-origin' })
+    const res = await fetch('/api/v1/me', { credentials: 'same-origin' })
     if (!res.ok) return
     const data = await res.json()
     activeCodes.value = data.data?.active_code_details ?? []

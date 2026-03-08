@@ -1,11 +1,13 @@
 import uuid
 
 from api_exception import APIException, BaseExceptionCode, ResponseModel
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, Header, Request, Response
 from pydantic import BaseModel
 
+from sharetree.api.admin.deps import check_is_admin
 from sharetree.services import access as access_service
 
+me_router = APIRouter(prefix="/me")
 router = APIRouter(prefix="/access")
 
 
@@ -14,26 +16,29 @@ class ActiveCodeDetail(BaseModel):
     nick: str | None
 
 
-class AccessCodesResponse(BaseModel):
+class MeResponse(BaseModel):
     active_codes: list[str]
     paths: list[str]
     active_code_details: list[ActiveCodeDetail]
+    is_admin: bool
 
 
-@router.get(
+@me_router.get(
     "",
-    response_model=ResponseModel[AccessCodesResponse],
+    response_model=ResponseModel[MeResponse],
 )
-async def get_access_code(request: Request) -> ResponseModel[AccessCodesResponse]:
+async def get_me(request: Request, remote_groups: str | None = Header(default=None)) -> ResponseModel[MeResponse]:
     codes: list[str] = request.session.get("access_codes", [])
     active_access_codes = access_service.resolve_access_code_paths(codes)
+    is_admin = check_is_admin(request, remote_groups)
     return ResponseModel(
-        data=AccessCodesResponse.model_construct(
+        data=MeResponse.model_construct(
             active_codes=active_access_codes["valid_active_codes"],
             paths=active_access_codes["accessible_paths"],
             active_code_details=[
                 ActiveCodeDetail(code=d["code"], nick=d["nick"]) for d in active_access_codes["active_code_details"]
             ],
+            is_admin=is_admin,
         )
     )
 
