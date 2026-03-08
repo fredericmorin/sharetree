@@ -16,6 +16,7 @@ from sharetree.settings import settings
 from sharetree.api.access import router as access_router
 from sharetree.api.admin.access import router as admin_access_router
 from sharetree.api.admin.auth import router as admin_auth_router
+from sharetree.api.admin.browse import router as admin_browse_router
 from sharetree.api.admin.deps import require_admin_group
 from sharetree.api.browse import router as browse_router
 from sharetree.api.download import router as download_router
@@ -84,6 +85,7 @@ api.include_router(admin_auth_router, prefix="/admin")
 
 admin = APIRouter(prefix="/admin", dependencies=[Depends(require_admin_group)])
 admin.include_router(admin_access_router)
+admin.include_router(admin_browse_router)
 api.include_router(admin)
 
 app.include_router(api)
