@@ -13,7 +13,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from sharetree.settings import settings
-from sharetree.api.access import router as access_router
+from sharetree.api.access import me_router, router as access_router
 from sharetree.api.admin.access import router as admin_access_router
 from sharetree.api.admin.auth import router as admin_auth_router
 from sharetree.api.admin.deps import require_admin_group
@@ -77,6 +77,7 @@ register_exception_handlers(app)  # consistent error and success api responses
 
 api = APIRouter(prefix="/api/v1")
 api.include_router(health_router)
+api.include_router(me_router)
 api.include_router(access_router)
 api.include_router(browse_router)
 

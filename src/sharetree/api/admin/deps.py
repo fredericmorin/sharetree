@@ -6,6 +6,17 @@ ADMIN_GROUP = "admins"
 SESSION_ADMIN_KEY = "admin_authenticated"
 
 
+def check_is_admin(request: Request, remote_groups: str | None = None) -> bool:
+    """Return True if the current request has admin access, without raising."""
+    if settings.TRUST_HEADERS:
+        if remote_groups is None:
+            return False
+        request_groups = {g.strip() for g in remote_groups.split(",") if g.strip()}
+        return ADMIN_GROUP in request_groups
+    else:
+        return bool(request.session.get(SESSION_ADMIN_KEY))
+
+
 def require_admin_group(request: Request, remote_groups: str | None = Header(default=None)) -> None:
     """Enforce admin access.
 

@@ -9,7 +9,7 @@ import Button from '@/components/ui/button/index.vue'
 import Skeleton from '@/components/ui/skeleton/index.vue'
 import Badge from '@/components/ui/badge/index.vue'
 import Separator from '@/components/ui/separator/index.vue'
-import { Search, AlertCircle, RefreshCw, Copy, Check, KeyRound } from 'lucide-vue-next'
+import { Search, AlertCircle, RefreshCw, Copy, Check, KeyRound, ShieldCheck } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -21,6 +21,7 @@ const searchQuery = ref('')
 const searchInput = useTemplateRef('searchInputRef')
 
 const activeCodes = ref([])
+const isAdmin = ref(false)
 const newCode = ref('')
 const codeError = ref(null)
 const submitting = ref(false)
@@ -70,10 +71,11 @@ useEventListener(document, 'keydown', (e) => {
 
 async function fetchActiveCodes() {
   try {
-    const res = await fetch('/api/v1/access', { credentials: 'same-origin' })
+    const res = await fetch('/api/v1/me', { credentials: 'same-origin' })
     if (!res.ok) return
     const data = await res.json()
     activeCodes.value = data.data?.active_code_details ?? []
+    isAdmin.value = data.data?.is_admin ?? false
   } catch {
     // silently ignore
   }
@@ -116,6 +118,10 @@ onMounted(() => {
   <div>
     <div class="flex items-center justify-between mb-6">
       <Breadcrumbs :path="currentPath" />
+      <Button v-if="isAdmin" variant="outline" size="sm" @click="router.push('/admin')">
+        <ShieldCheck class="h-4 w-4 mr-2" />
+        Admin
+      </Button>
     </div>
 
     <div v-if="loading" class="space-y-2">
