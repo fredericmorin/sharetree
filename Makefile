@@ -4,15 +4,10 @@ dev:
 	docker compose -f docker-compose.dev.yml up
 
 .PHONY: frontend
-frontend:
-	cd frontend && npm install && npm run build
+frontend: static/index.html
 
 static/index.html:
 	cd frontend && npm install && npm run build
-
-.PHONY: run
-run: .venv/install static/index.html
-	.venv/bin/sharetree
 
 .PHONY: check
 check: .venv/install

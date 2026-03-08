@@ -6,10 +6,12 @@ services:
       - .:/app
       - venv:/app/.venv
     environment:
+      PYTHONDONTWRITEBYTECODE: 1
       SHARETREE_DEV: "true"
       SHARETREE_SESSION_SECRET: "${SHARETREE_SESSION_SECRET:-dev-secret-change-me}"
       SHARETREE_SHARE_ROOT: /app/files
       SHARETREE_DATA_PATH: /app/data
+      SHARETREE_ADMIN_PASSWORD: dev
     entrypoint: ["/bin/sh","-c"]
     command:
       - |
