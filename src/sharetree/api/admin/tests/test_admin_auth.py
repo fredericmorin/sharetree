@@ -20,6 +20,14 @@ ME_URL = "/api/v1/admin/me"
 VALID_BODY = {"patterns": ["/docs/*"], "nick": "test"}
 ADMIN_PASSWORD = "supersecret"
 
+# All protected admin endpoints: (method, path, json_body)
+PROTECTED_ADMIN_ENDPOINTS = [
+    ("POST", "/api/v1/admin/access/create", {"patterns": ["/docs/*"], "nick": "test"}),
+    ("GET", "/api/v1/admin/access/sessions", None),
+    ("GET", "/api/v1/admin/browse", None),
+    ("GET", "/api/v1/admin/browse/some/path", None),
+]
+
 
 @pytest.fixture()
 def mock_create_access_code():
@@ -151,3 +159,22 @@ def test_me_endpoint_returns_404_when_trust_headers_enabled(trust_headers_enable
     client = TestClient(app, raise_server_exceptions=False)
     response = client.get(ME_URL)
     assert response.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# Parametrized: every protected admin endpoint enforces auth
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("method,path,body", PROTECTED_ADMIN_ENDPOINTS)
+def test_all_admin_endpoints_require_session_auth(method, path, body, trust_headers_disabled):
+    client = TestClient(app, raise_server_exceptions=False)
+    response = client.request(method, path, json=body)
+    assert response.status_code == 403, f"{method} {path} should be 403 without session auth"
+
+
+@pytest.mark.parametrize("method,path,body", PROTECTED_ADMIN_ENDPOINTS)
+def test_all_admin_endpoints_require_remote_groups_header(method, path, body, trust_headers_enabled):
+    client = TestClient(app, raise_server_exceptions=False)
+    response = client.request(method, path, json=body)
+    assert response.status_code == 403, f"{method} {path} should be 403 without Remote-Groups header"
