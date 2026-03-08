@@ -6,6 +6,7 @@ import AdminView from '../views/AdminView.vue'
 import AdminSessionsView from '../views/AdminSessionsView.vue'
 import AdminBrowseView from '../views/AdminBrowseView.vue'
 import AdminCreateAccessCodeView from '../views/AdminCreateAccessCodeView.vue'
+import NotFoundView from '../views/NotFoundView.vue'
 
 const routes = [
   { path: '/', component: BrowseView },
@@ -17,6 +18,7 @@ const routes = [
   { path: '/admin/browse', component: AdminBrowseView },
   { path: '/admin/browse/:path(.*)*', component: AdminBrowseView },
   { path: '/admin/access/create', component: AdminCreateAccessCodeView },
+  { path: '/:pathMatch(.*)*', component: NotFoundView },
 ]
 
 export default createRouter({
