@@ -56,15 +56,16 @@ def _get_or_create_session_id(request: Request) -> str:
 async def activate_access_code(body: AccessCodeRequest, request: Request, response: Response) -> ResponseModel[None]:
     previous_codes: list[str] = request.session.get("access_codes", [])
 
-    valid_codes = access_service.prune_invalid_access_codes([body.code, *previous_codes])
-
-    if body.code not in valid_codes:
+    if body.code not in previous_codes and not access_service.is_access_code_unclaimed(body.code):
         raise APIException(AccessCodeExceptionCode.ACCESS_CODE_NOT_FOUND, http_status_code=404)
 
-    request.session["access_codes"] = valid_codes
+    valid_codes = access_service.prune_invalid_access_codes([body.code, *previous_codes])
 
     if body.code in previous_codes:
+        request.session["access_codes"] = valid_codes
         return ResponseModel(error_code="ALREADY_ACTIVE")
+
+    request.session["access_codes"] = valid_codes
 
     session_id = _get_or_create_session_id(request)
     access_service.set_access_code_session(body.code, session_id)

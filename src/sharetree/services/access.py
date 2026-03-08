@@ -38,6 +38,15 @@ def prune_invalid_access_codes(access_codes: list[str]) -> list[str]:
     return [row.code for row in rows]
 
 
+def is_access_code_unclaimed(code: str) -> bool:
+    """Return True if the code exists and has not yet been claimed by any session."""
+    with get_session() as session:
+        return (
+            session.query(AccessCode.code).filter(AccessCode.code == code, AccessCode.session_id.is_(None)).first()
+            is not None
+        )
+
+
 def create_access_code(patterns: list[str], nick: str | None = None) -> str:
     code = secrets.token_urlsafe(16)
     with get_session() as session:
