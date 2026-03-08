@@ -12,7 +12,7 @@ import Button from '@/components/ui/button/index.vue'
 import Input from '@/components/ui/input/index.vue'
 import Badge from '@/components/ui/badge/index.vue'
 import Separator from '@/components/ui/separator/index.vue'
-import { Copy, Check, KeyRound } from 'lucide-vue-next'
+import { Copy, Check, KeyRound, ShieldCheck } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -21,6 +21,7 @@ const codeInput = ref('')
 const error = ref(null)
 const submitting = ref(false)
 const activeCodes = ref([])
+const isAdmin = ref(false)
 
 const { copy, copied, isSupported: clipboardSupported } = useClipboard()
 
@@ -30,6 +31,7 @@ async function fetchActiveCodes() {
     if (!res.ok) return
     const data = await res.json()
     activeCodes.value = data.data?.active_code_details ?? []
+    isAdmin.value = data.data?.is_admin ?? false
   } catch {
     // silently ignore
   }
@@ -66,7 +68,15 @@ onMounted(fetchActiveCodes)
 </script>
 
 <template>
-  <div class="flex justify-center pt-8">
+  <div class="flex flex-col items-center pt-8">
+    <div class="w-full max-w-md">
+      <div v-if="isAdmin" class="flex justify-end mb-4">
+        <Button variant="outline" size="sm" @click="router.push('/admin')">
+          <ShieldCheck class="h-4 w-4 mr-2" />
+          Admin
+        </Button>
+      </div>
+    </div>
     <Card class="w-full max-w-md">
       <CardHeader>
         <div class="flex items-center gap-2">
