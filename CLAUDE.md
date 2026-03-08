@@ -183,6 +183,7 @@ Admin endpoints under `/api/v1/admin/` (except login/logout/me) require admin ac
 - Each code maps to a list of `fnmatch` patterns controlling which paths are visible and downloadable.
 - Pattern examples: `/docs/*` (shallow), `/reports/**` (recursive — `*` matches `/` in fnmatch).
 - **Path traversal protection:** `services/browse.py` resolves paths with `.resolve()` and verifies they remain under `SHARE_ROOT`. Symlink escapes are blocked.
+- **Rate limiting:** Not implemented in the app. In default mode (`TRUST_HEADERS=false`), `POST /api/v1/admin/login` is the brute-force surface. Deployments should rate-limit this endpoint at the reverse proxy layer (nginx `limit_req`, Caddy `rate_limit`, Traefik `rateLimit` middleware). Trusted-headers mode (`TRUST_HEADERS=true`) delegates auth entirely to the upstream proxy, so the login endpoint is disabled and this concern does not apply.
 
 ## Testing
 

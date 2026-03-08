@@ -48,6 +48,8 @@ The app always listens on **port 8000**. Admin authentication works in two modes
 Admin routes are protected by a session-based login page at `/admin/login`.
 Set `SHARETREE_ADMIN_PASSWORD` to the desired admin password.
 
+> **Rate limiting:** The app does not implement rate limiting on the login endpoint. In default mode, protect against brute-force attacks by placing sharetree behind a reverse proxy (nginx, Caddy, Traefik) and configuring request rate limits there.
+
 ```yaml
 services:
   sharetree:
