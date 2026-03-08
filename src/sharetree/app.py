@@ -20,6 +20,7 @@ from sharetree.api.admin.browse import router as admin_browse_router
 from sharetree.api.admin.deps import require_admin_group
 from sharetree.api.browse import router as browse_router
 from sharetree.api.download import router as download_router
+from sharetree.api.headers import router as headers_router
 from sharetree.api.health import router as health_router
 from sharetree.db import run_migrations
 from sharetree.logging import configure_logging
@@ -78,6 +79,7 @@ register_exception_handlers(app)  # consistent error and success api responses
 
 api = APIRouter(prefix="/api/v1")
 api.include_router(health_router)
+api.include_router(headers_router)
 api.include_router(me_router)
 api.include_router(access_router)
 api.include_router(browse_router)
