@@ -28,6 +28,7 @@ See [CLAUDE.md](CLAUDE.md) for full developer documentation.
 - [x] Admin authentication — session login page (password) or trusted headers (reverse proxy)
 - [x] Session tracking — records which user session first claimed each access code
   - [x] Admin page to browse claims grouped by session with pagination
+- [x] Admin file browser — browse the full server file tree and create access codes from any file or folder
 - [ ] Custom forward-auth API endpoint
 ## Deploy
 
