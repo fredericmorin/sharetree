@@ -44,7 +44,8 @@ api.include_router(access_router)
 api.include_router(browse_router)
 api.include_router(auth_router)
 
-api.include_router(admin_auth_router, prefix="/admin")
+if not settings.TRUST_HEADERS:
+    api.include_router(admin_auth_router, prefix="/admin")
 
 admin = APIRouter(prefix="/admin", dependencies=[Depends(require_admin_group)])
 admin.include_router(admin_access_router)

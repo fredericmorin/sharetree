@@ -1,7 +1,7 @@
 
 .PHONY: dev
 dev:
-	docker compose -f docker-compose.dev.yml up
+	docker compose -f docker/docker-compose.dev.yml up
 
 .PHONY: frontend
 frontend: static/index.html

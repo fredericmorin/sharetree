@@ -35,9 +35,6 @@ COPY alembic.ini .
 # Built frontend assets
 COPY --from=frontend-builder /app/static/ static/
 
-COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     SHARETREE_DATA_PATH=/data \
@@ -48,4 +45,4 @@ VOLUME ["/data", "/files"]
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:8000/api/v1/health || exit 1
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["sharetree"]

@@ -170,21 +170,9 @@ onMounted(() => {
             class="flex items-center justify-between gap-2 rounded-md border bg-muted/40 px-3 py-2"
           >
             <div class="flex items-center gap-2 min-w-0">
-              <code class="font-mono text-sm truncate">{{ detail.code }}</code>
-              <Badge v-if="detail.nick" variant="secondary" class="shrink-0">{{ detail.nick }}</Badge>
+              <p class="text-sm font-medium text-muted-foreground">{{ detail.nick }} ({{ detail.code }})</p>
+              <Badge v-for="pattern in detail.patterns" variant="secondary" class="shrink-0">{{ pattern }}</Badge>
             </div>
-            <Button
-              v-if="clipboardSupported"
-              variant="ghost"
-              size="icon"
-              class="h-7 w-7 shrink-0"
-              type="button"
-              :aria-label="`Copy code ${detail.code}`"
-              @click="copy(detail.code)"
-            >
-              <Check v-if="copied" class="h-3.5 w-3.5 text-green-500" />
-              <Copy v-else class="h-3.5 w-3.5" />
-            </Button>
           </li>
         </ul>
       </div>

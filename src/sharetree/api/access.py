@@ -14,6 +14,7 @@ router = APIRouter(prefix="/access")
 class ActiveCodeDetail(BaseModel):
     code: str
     nick: str | None
+    patterns: list[str]
 
 
 class MeResponse(BaseModel):
@@ -36,7 +37,8 @@ async def get_me(request: Request, remote_groups: str | None = Header(default=No
             active_codes=active_access_codes["valid_active_codes"],
             paths=active_access_codes["accessible_paths"],
             active_code_details=[
-                ActiveCodeDetail(code=d["code"], nick=d["nick"]) for d in active_access_codes["active_code_details"]
+                ActiveCodeDetail(code=d["code"], nick=d["nick"], patterns=d["patterns"])
+                for d in active_access_codes["active_code_details"]
             ],
             is_admin=is_admin,
         )

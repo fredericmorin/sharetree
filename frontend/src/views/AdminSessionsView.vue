@@ -23,13 +23,13 @@ const error = ref(null)
 
 async function checkAuth() {
   try {
-    const res = await fetch('/api/v1/admin/me', { credentials: 'same-origin' })
+    const res = await fetch('/api/v1/me', { credentials: 'same-origin' })
     if (!res.ok) {
       router.replace('/admin/login')
       return false
     }
     const data = await res.json()
-    if (!data.data?.authenticated) {
+    if (!data.data?.is_admin) {
       router.replace('/admin/login')
       return false
     }

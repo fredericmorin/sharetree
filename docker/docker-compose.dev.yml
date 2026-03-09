@@ -2,17 +2,29 @@ services:
   caddy:
     image: caddy:2-alpine
     ports:
-      - "8080:80"
-    volumes:
-      - ./docker/Caddyfile.dev:/etc/caddy/Caddyfile:ro
+      - "8080:80"  # admin
     depends_on:
       - api
+    entrypoint: ["/bin/sh","-c"]
+    command:
+      - |
+        set -ex
+        cat << EOF > /etc/caddy/Caddyfile
+        :80 {
+          reverse_proxy api:8000 {
+            header_up Remote-Groups admins
+          }
+        }
+        EOF
+        caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
 
   api:
     image: python:3.13-slim
+    ports:
+      - "8000:8000"  # not admin
     working_dir: /app
     volumes:
-      - .:/app
+      - ..:/app
       - venv:/app/.venv
     environment:
       PYTHONDONTWRITEBYTECODE: 1
@@ -33,7 +45,7 @@ services:
     image: node:22-slim
     working_dir: /app
     volumes:
-      - .:/app
+      - ..:/app
       - node_modules:/app/frontend/node_modules
     entrypoint: ["/bin/sh","-c"]
     command:

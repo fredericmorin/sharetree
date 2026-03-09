@@ -41,15 +41,13 @@ async def admin_login(body: AdminLoginRequest, request: Request) -> ResponseMode
 
 @router.post("/logout", response_model=ResponseModel[AdminStatusResponse])
 async def admin_logout(request: Request) -> ResponseModel[AdminStatusResponse]:
-    """Clear the admin session."""
-    request.session.pop(SESSION_ADMIN_KEY, None)
-    return ResponseModel(data=AdminStatusResponse(authenticated=False))
+    """Clear the admin session.
 
-
-@router.get("/me", response_model=ResponseModel[AdminStatusResponse])
-async def admin_me(request: Request) -> ResponseModel[AdminStatusResponse]:
-    """Return whether the current session has admin access (password-auth mode only)."""
+    Only active when TRUST_HEADERS is False. When TRUST_HEADERS is True,
+    admin access is controlled by the upstream proxy via Remote-Groups header.
+    """
     if settings.TRUST_HEADERS:
         raise HTTPException(status_code=404, detail="Not found")
-    authenticated = bool(request.session.get(SESSION_ADMIN_KEY))
-    return ResponseModel(data=AdminStatusResponse(authenticated=authenticated))
+
+    request.session.pop(SESSION_ADMIN_KEY, None)
+    return ResponseModel(data=AdminStatusResponse(authenticated=False))

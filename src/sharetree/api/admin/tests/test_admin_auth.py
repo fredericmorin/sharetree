@@ -16,7 +16,6 @@ from sharetree.app import app
 ADMIN_URL = "/api/v1/admin/access/create"
 LOGIN_URL = "/api/v1/admin/login"
 LOGOUT_URL = "/api/v1/admin/logout"
-ME_URL = "/api/v1/admin/me"
 VALID_BODY = {"patterns": ["/docs/*"], "nick": "test"}
 ADMIN_PASSWORD = "supersecret"
 
@@ -95,13 +94,6 @@ def test_logout_clears_admin_session(mock_create_access_code, trust_headers_disa
     assert client.post(ADMIN_URL, json=VALID_BODY).status_code == 403
 
 
-def test_me_returns_authenticated_after_login(trust_headers_disabled):
-    client = TestClient(app, raise_server_exceptions=False)
-    assert client.get(ME_URL).json()["data"]["authenticated"] is False
-    client.post(LOGIN_URL, json={"password": ADMIN_PASSWORD})
-    assert client.get(ME_URL).json()["data"]["authenticated"] is True
-
-
 # ---------------------------------------------------------------------------
 # TRUST_HEADERS=True — Remote-Groups header
 # ---------------------------------------------------------------------------
@@ -152,12 +144,6 @@ def test_whitespace_group_names_are_handled(mock_create_access_code, trust_heade
 def test_login_endpoint_returns_404_when_trust_headers_enabled(trust_headers_enabled):
     client = TestClient(app, raise_server_exceptions=False)
     response = client.post(LOGIN_URL, json={"password": "anything"})
-    assert response.status_code == 404
-
-
-def test_me_endpoint_returns_404_when_trust_headers_enabled(trust_headers_enabled):
-    client = TestClient(app, raise_server_exceptions=False)
-    response = client.get(ME_URL)
     assert response.status_code == 404
 
 

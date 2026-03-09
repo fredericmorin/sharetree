@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     DATA_PATH: Path = Path("data")
     TRUST_HEADERS: bool = False
     ADMIN_PASSWORD: str | None = None
-    DEV: bool = True
+    DEV: bool = False
 
 
 @lru_cache

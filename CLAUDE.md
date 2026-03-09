@@ -32,9 +32,7 @@ sharetree/
 │   └── verify              # Run ruff format, ruff check --fix, ty check
 ├── docker/
 │   ├── Caddyfile               # Production Caddy config (forward-auth + file_server)
-│   ├── Caddyfile.dev           # Dev Caddy config (trusted-headers proxy)
-│   ├── docker-compose.prod.yml # Production compose: Caddy + API with forward-auth
-│   └── entrypoint.sh           # Container startup script
+│   └── docker-compose.prod.yml # Production compose: Caddy + API with forward-auth
 ├── frontend/               # Vue.js 3 SPA (Vite + Tailwind CSS v4 + shadcn-vue)
 │   └── src/
 │       ├── assets/         # index.css — Tailwind entry + shadcn design tokens
@@ -62,7 +60,7 @@ sharetree/
 │   │   ├── browse.py       # GET /api/v1/browse[/{path}]
 │   │   ├── download.py     # GET /download/{path}
 │   │   └── admin/access.py # POST /api/v1/admin/access/create, GET /api/v1/admin/access/sessions
-│   │       admin/auth.py   # POST /api/v1/admin/login|logout, GET /api/v1/admin/me
+│   │       admin/auth.py   # POST /api/v1/admin/login|logout, GET /api/v1/me
 │   │       admin/browse.py # GET /api/v1/admin/browse[/{path}] — full tree, no access-code filter
 │   │       admin/deps.py   # require_admin_group dependency (session or header)
 │   └── services/
@@ -153,13 +151,12 @@ Base prefix: `/api/v1`
 |---|---|---|
 | GET | `/health` | Returns `{"status": "ok"}` |
 | GET | `/auth` | Forward-auth check for reverse proxy; validates `X-Forwarded-Uri` against session access codes |
-| GET | `/access` | Returns active access codes and accessible paths from session |
+| GET | `/me` | Returns active access codes and accessible paths from session and admin auth status |
 | POST | `/access/activate` | Validates and adds an access code to the session |
 | GET | `/browse` | Lists root directory (filtered by session access codes) |
 | GET | `/browse/{path}` | Lists a subdirectory |
 | POST | `/admin/login` | Log in as admin using `ADMIN_PASSWORD` (disabled when `TRUST_HEADERS=true`) |
 | POST | `/admin/logout` | Clear admin session |
-| GET | `/admin/me` | Return current admin auth status (disabled when `TRUST_HEADERS=true`) |
 | POST | `/admin/access/create` | Creates a new access code with given patterns |
 | GET | `/admin/access/sessions` | Lists access codes grouped by session, paginated (200/page) |
 | GET | `/admin/browse` | Lists root directory (full tree, no access-code filter; admin only) |

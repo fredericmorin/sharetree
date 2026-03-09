@@ -9,6 +9,7 @@ from sharetree.models.all import AccessCode
 class ActiveCodeDetail(TypedDict):
     code: str
     nick: str | None
+    patterns: list[str]
 
 
 class ActiveAccessCodes(TypedDict):
@@ -24,7 +25,7 @@ def resolve_access_code_paths(access_codes: list[str]) -> ActiveAccessCodes:
     details: list[ActiveCodeDetail] = []
     for row in rows:
         all_paths.update(row.patterns)
-        details.append(ActiveCodeDetail(code=row.code, nick=row.nick))
+        details.append(ActiveCodeDetail(code=row.code, nick=row.nick, patterns=row.patterns))
     return ActiveAccessCodes(
         valid_active_codes=[row.code for row in rows],
         accessible_paths=list(all_paths),
