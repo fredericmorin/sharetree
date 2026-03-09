@@ -32,7 +32,8 @@ sharetree/
 │   ├── setup-dev-venv.sh   # Create + populate venv via uv
 │   └── verify              # Run ruff format, ruff check --fix, ty check
 ├── docker/
-│   ├── Caddyfile               # Production Caddy config (forward-auth + file_server)
+│   ├── Caddyfile               # Production Caddy config (WAF + rate-limit + forward-auth + file_server)
+│   ├── Dockerfile.caddy        # Custom Caddy build (caddy-ratelimit + coraza-caddy plugins via xcaddy)
 │   └── docker-compose.prod.yml # Production compose: Caddy + API with forward-auth
 ├── frontend/               # Vue.js 3 SPA (Vite + Tailwind CSS v4 + shadcn-vue)
 │   └── src/
@@ -198,7 +199,12 @@ Admin endpoints under `/api/v1/admin/` (except login/logout/me) require admin ac
 - Each code maps to a list of `fnmatch` patterns controlling which paths are visible and downloadable.
 - Pattern examples: `/docs/*` (shallow), `/reports/**` (recursive — `*` matches `/` in fnmatch).
 - **Path traversal protection:** `services/browse.py` resolves paths with `.resolve()` and verifies they remain under `SHARE_ROOT`. Symlink escapes are blocked.
-- **Rate limiting:** Not implemented in the app. In default mode (`TRUST_HEADERS=false`), `POST /api/v1/admin/login` is the brute-force surface. Deployments should rate-limit this endpoint at the reverse proxy layer (nginx `limit_req`, Caddy `rate_limit`, Traefik `rateLimit` middleware). Trusted-headers mode (`TRUST_HEADERS=true`) delegates auth entirely to the upstream proxy, so the login endpoint is disabled and this concern does not apply.
+- **Rate limiting:** Implemented in the production Caddy config (`docker/Caddyfile`) via the `caddy-ratelimit` plugin (compiled into the custom `Dockerfile.caddy` image):
+  - `POST /api/v1/access/activate` — 5 attempts per IP per minute (brute-force surface for access codes).
+  - `POST /api/v1/admin/login` — 10 attempts per IP per 5 minutes (brute-force surface for admin password). Only active in default mode (`TRUST_HEADERS=false`); trusted-headers mode disables the login endpoint entirely.
+  - Exceeding a limit returns HTTP 429.
+- **WAF:** Implemented via `coraza-caddy` (Coraza WAF with OWASP CRS rules, blocking mode) in the production Caddy config. Applied globally before routing. Change `SecRuleEngine On` to `DetectionOnly` in `docker/Caddyfile` for a non-blocking initial rollout.
+- **Upload size limits:** `request_body max_size 10MB` in `docker/Caddyfile` rejects oversized POST bodies with HTTP 413 (native Caddy, no plugin required).
 
 ## Testing
 
@@ -259,9 +265,15 @@ The app always listens on **port 8000**. The image supports two admin auth modes
 
 Volumes: `/data` (database), `/files` (shared files). Health check: `GET /api/v1/health`.
 
-### Production with Caddy (forward-auth)
+### Production with Caddy (forward-auth + WAF + rate limiting)
 
 `docker/docker-compose.prod.yml` provides a ready-to-use production setup where Caddy serves file downloads **directly from the filesystem**, bypassing Python for file I/O. Python only handles the auth check at `GET /api/v1/auth`.
+
+The Caddy service is built from `docker/Dockerfile.caddy`, which compiles a custom Caddy binary with two plugins via `xcaddy`:
+- **`caddy-ratelimit`** (`github.com/mholt/caddy-ratelimit`) — rate limits brute-force endpoints.
+- **`coraza-caddy`** (`github.com/corazawaf/coraza-caddy/v2`) — OWASP CRS WAF, runs before all other handlers.
+
+> **Note:** The first `docker compose build` takes several minutes as xcaddy compiles Go code. Subsequent builds are fast thanks to Go module cache mounts.
 
 ```
 User → Caddy → GET /api/v1/auth (Python checks session)

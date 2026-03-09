@@ -15,7 +15,11 @@
 
 services:
   caddy:
-    image: caddy:2-alpine
+    build:
+      # Custom Caddy image compiled with caddy-ratelimit and coraza-caddy (WAF) plugins.
+      # See Dockerfile.caddy for details. Requires ~1 GB RAM to build (xcaddy/Go).
+      context: .
+      dockerfile: Dockerfile.caddy
     restart: unless-stopped
     ports:
       - "80:80"
