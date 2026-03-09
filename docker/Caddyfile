@@ -10,17 +10,19 @@
 		forward_auth api:8000 {
 			uri /api/v1/auth
 			# Session cookie must be forwarded so the app can read the user's session.
-			copy_headers Cookie
+			# Remote-Groups is forwarded so trusted-headers mode works with an upstream IdP.
+			copy_headers Cookie Remote-Groups
 		}
 
-		# Strip /download prefix before serving from SHARE_ROOT.
-		uri strip_prefix /download
 		root * /files
 		file_server
 	}
 
 	# All other requests (API, SPA, admin) proxy to the FastAPI app.
 	handle {
-		reverse_proxy api:8000
+		reverse_proxy api:8000 {
+			# Forward Remote-Groups so trusted-headers mode works with an upstream IdP.
+			header_up Remote-Groups {http.request.header.Remote-Groups}
+		}
 	}
 }
