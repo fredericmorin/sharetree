@@ -30,6 +30,8 @@ class MeResponse(BaseModel):
 )
 async def get_me(request: Request, remote_groups: str | None = Header(default=None)) -> ResponseModel[MeResponse]:
     codes: list[str] = request.session.get("access_codes", [])
+    codes = access_service.prune_invalid_access_codes(codes)
+    request.session["access_codes"] = codes
     active_access_codes = access_service.resolve_access_code_paths(codes)
     is_admin = check_is_admin(request, remote_groups)
     return ResponseModel(

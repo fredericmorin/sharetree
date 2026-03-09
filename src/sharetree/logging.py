@@ -58,6 +58,10 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         duration_ms = round((time.perf_counter() - start) * 1000, 2)
         resp_headers = {k: v for k, v in response.headers.items() if k.lower() in _LOGGED_RESPONSE_HEADERS}
 
+        extras: dict = {}
+        if hasattr(request.state, "extras"):
+            extras = request.state.extras
+
         log.info(
             "request",
             method=request.method,
@@ -68,6 +72,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             client_ip=client_ip,
             **{f"req_{k.replace('-', '_')}": v for k, v in req_headers.items()},
             **{f"res_{k.replace('-', '_')}": v for k, v in resp_headers.items()},
+            **extras,
         )
 
         return response

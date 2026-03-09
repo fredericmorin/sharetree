@@ -14,6 +14,8 @@
 			copy_headers Cookie Remote-Groups
 		}
 
+		# Strip /download prefix before serving from SHARE_ROOT.
+		uri strip_prefix /download
 		root * /files
 		file_server
 	}

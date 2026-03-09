@@ -1,3 +1,5 @@
+from urllib.parse import unquote
+
 from fastapi import APIRouter, Header, HTTPException, Request
 from pydantic import BaseModel
 
@@ -6,7 +8,7 @@ from sharetree.services import browse as browse_service
 
 router = APIRouter()
 
-_DOWNLOAD_PREFIX = "/download/"
+_DOWNLOAD_PREFIX = "/"
 
 
 class AuthResponse(BaseModel):
@@ -28,15 +30,23 @@ async def forward_auth(
         raise HTTPException(status_code=400, detail="X-Forwarded-Uri header is required")
 
     if not x_forwarded_uri.startswith(_DOWNLOAD_PREFIX):
-        raise HTTPException(status_code=400, detail="X-Forwarded-Uri must start with /download/")
+        raise HTTPException(status_code=400, detail=f"X-Forwarded-Uri must start with {_DOWNLOAD_PREFIX}")
 
-    path = x_forwarded_uri[len(_DOWNLOAD_PREFIX) :]
+    path = unquote(x_forwarded_uri[len(_DOWNLOAD_PREFIX) :])
 
     if not path:
         raise HTTPException(status_code=400, detail="Empty file path")
 
     codes: list[str] = request.session.get("access_codes", [])
+    codes = access_service.prune_invalid_access_codes(codes)
+    request.session["access_codes"] = codes
     patterns: list[str] = access_service.resolve_access_code_paths(codes)["accessible_paths"]
+
+    request.state.extras = dict(
+        auth_codes=codes,
+        auth_patterns=patterns,
+        download_path=path,
+    )
 
     browse_service.get_file_path(path, patterns)  # raises HTTPException 403/404 on denial
 
