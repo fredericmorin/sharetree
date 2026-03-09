@@ -11,7 +11,7 @@ import BreadcrumbLink from '@/components/ui/breadcrumb/BreadcrumbLink.vue'
 import BreadcrumbPage from '@/components/ui/breadcrumb/BreadcrumbPage.vue'
 import BreadcrumbSeparator from '@/components/ui/breadcrumb/BreadcrumbSeparator.vue'
 import { RouterLink } from 'vue-router'
-import { ChevronLeft, ChevronRight, ShieldCheck, Trash2, Unlink, Pencil, Check, X } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, ShieldCheck, Trash2, Unlink, Pencil, Check, X, Copy } from 'lucide-vue-next'
 
 const router = useRouter()
 const route = useRoute()
@@ -24,6 +24,7 @@ const loading = ref(false)
 const error = ref(null)
 const revoking = ref(null)
 const releasing = ref(null)
+const duplicating = ref(null)
 const editingNick = ref(null)
 const editNickValue = ref('')
 
@@ -92,6 +93,23 @@ async function revokeCode(code) {
     }
   } finally {
     revoking.value = null
+  }
+}
+
+async function duplicateCode(code) {
+  duplicating.value = code
+  try {
+    const res = await fetch('/api/v1/admin/access/duplicate', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
+    })
+    if (res.ok) {
+      await loadPage(page.value)
+    }
+  } finally {
+    duplicating.value = null
   }
 }
 
@@ -255,6 +273,16 @@ onMounted(async () => {
                     title="Rename"
                   >
                     <Pencil class="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    class="h-6 w-6 text-muted-foreground hover:text-foreground"
+                    :disabled="duplicating === entry.code"
+                    @click="duplicateCode(entry.code)"
+                    title="Duplicate"
+                  >
+                    <Copy class="h-3.5 w-3.5" />
                   </Button>
                   <Button
                     variant="ghost"

@@ -91,6 +91,19 @@ def release_access_code(code: str) -> bool:
         return True
 
 
+def duplicate_access_code(code: str) -> str | None:
+    """Copy an access code row with a new token and no session_id. Returns new code, or None if source not found."""
+    with get_session() as session:
+        row = session.get(AccessCode, code)
+        if row is None:
+            return None
+        new_code = secrets.token_urlsafe(16)
+        new_entry = AccessCode(code=new_code, _patterns_json=row._patterns_json, nick=row.nick, session_id=None)
+        session.add(new_entry)
+        session.commit()
+    return new_code
+
+
 def set_access_code_session(code: str, session_id: str) -> None:
     """Record which session first claimed this access code."""
     with get_session() as session:

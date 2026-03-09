@@ -69,6 +69,22 @@ async def update_nick(body: UpdateNickRequest) -> ResponseModel[None]:
     return ResponseModel(data=None)
 
 
+class DuplicateAccessCodeRequest(BaseModel):
+    code: str
+
+
+class DuplicateAccessCodeResponse(BaseModel):
+    code: str
+
+
+@router.post("/duplicate", response_model=ResponseModel[DuplicateAccessCodeResponse])
+async def duplicate_access_code(body: DuplicateAccessCodeRequest) -> ResponseModel[DuplicateAccessCodeResponse]:
+    new_code = access_service.duplicate_access_code(body.code)
+    if new_code is None:
+        raise HTTPException(status_code=404, detail="Access code not found")
+    return ResponseModel(data=DuplicateAccessCodeResponse(code=new_code))
+
+
 class ReleaseAccessCodeRequest(BaseModel):
     code: str
 
