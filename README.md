@@ -29,10 +29,12 @@ See [CLAUDE.md](CLAUDE.md) for full developer documentation.
 - [x] Session tracking — records which user session first claimed each access code
   - [x] Admin page to browse claims grouped by session with pagination
 - [x] Admin file browser — browse the full server file tree and create access codes from any file or folder
-- [ ] Custom forward-auth API endpoint
+- [x] Forward-auth API endpoint — lets a reverse proxy (Caddy) serve file downloads directly from the filesystem
+
 ## Deploy
 
 - [x] Docker — multi-stage image with frontend build
+- [x] Caddy production compose — forward-auth offloads file I/O from Python to Caddy
 - [ ] Redis session store
 
 ### Docker
@@ -42,6 +44,26 @@ docker build -t sharetree .
 ```
 
 The app always listens on **port 8000**. Admin authentication works in two modes:
+
+#### Production: Caddy with forward-auth (recommended)
+
+`docker/docker-compose.prod.yml` wires Caddy as a TLS-terminating reverse proxy that serves file downloads **directly from the filesystem** — Python only handles the authorization check via `GET /api/v1/auth`. This eliminates Python from the file I/O path.
+
+```sh
+cd docker
+cp ../.env.example .env   # set SHARETREE_SESSION_SECRET and SHARETREE_ADMIN_PASSWORD
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Key variables for this setup:
+
+| Variable | Description |
+|---|---|
+| `SHARETREE_FILES_PATH` | Host path to the shared file tree (default: `../files`) |
+| `SHARETREE_SESSION_SECRET` | Required; random secret for encrypted session cookies |
+| `SHARETREE_ADMIN_PASSWORD` | Required; password for the built-in admin login page |
+
+Caddy handles HTTPS automatically (Let's Encrypt). For HTTP-only or custom TLS, edit `docker/Caddyfile`.
 
 #### Default mode (built-in admin login page)
 
