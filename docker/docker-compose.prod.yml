@@ -1,0 +1,49 @@
+# Production docker-compose for sharetree.
+#
+# Caddy handles TLS, serves file downloads directly from the filesystem, and
+# delegates authorization checks to the FastAPI app via forward_auth.
+# Python is only in the I/O path for API calls — not for file downloads.
+#
+# Required environment variables (set in a .env file or your shell):
+#   SHARETREE_SESSION_SECRET   — required; random secret for encrypted sessions
+#   SHARETREE_ADMIN_PASSWORD   — required when TRUST_HEADERS is false (default)
+#   SHARETREE_FILES_PATH       — host path to the shared file tree (default: ../files)
+#
+# Quick start:
+#   cd docker
+#   docker compose -f docker-compose.prod.yml up -d
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Caddy serves files directly — must mount the same path used by the app.
+      - ${SHARETREE_FILES_PATH:-../files}:/files:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+
+  api:
+    image: ghcr.io/fredericmorin/sharetree:latest
+    restart: unless-stopped
+    environment:
+      SHARETREE_SESSION_SECRET: ${SHARETREE_SESSION_SECRET}
+      SHARETREE_ADMIN_PASSWORD: ${SHARETREE_ADMIN_PASSWORD:-}
+      # Set to "true" to trust Remote-Groups header from an upstream proxy instead
+      # of using the built-in login page.
+      SHARETREE_TRUST_HEADERS: ${SHARETREE_TRUST_HEADERS:-false}
+    volumes:
+      - sharetree_data:/data
+      # Read-only: the app resolves paths and checks access but does not serve bytes.
+      - ${SHARETREE_FILES_PATH:-../files}:/files:ro
+
+volumes:
+  caddy_data:
+  caddy_config:
+  sharetree_data:

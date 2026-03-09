@@ -18,6 +18,7 @@ from sharetree.api.admin.access import router as admin_access_router
 from sharetree.api.admin.auth import router as admin_auth_router
 from sharetree.api.admin.browse import router as admin_browse_router
 from sharetree.api.admin.deps import require_admin_group
+from sharetree.api.auth import router as auth_router
 from sharetree.api.browse import router as browse_router
 from sharetree.api.download import router as download_router
 from sharetree.api.headers import router as headers_router
@@ -83,6 +84,7 @@ api.include_router(headers_router)
 api.include_router(me_router)
 api.include_router(access_router)
 api.include_router(browse_router)
+api.include_router(auth_router)
 
 api.include_router(admin_auth_router, prefix="/admin")
 

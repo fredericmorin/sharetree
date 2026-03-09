@@ -31,7 +31,10 @@ sharetree/
 │   ├── setup-dev-venv.sh   # Create + populate venv via uv
 │   └── verify              # Run ruff format, ruff check --fix, ty check
 ├── docker/
-│   └── entrypoint.sh       # Container startup script
+│   ├── Caddyfile               # Production Caddy config (forward-auth + file_server)
+│   ├── Caddyfile.dev           # Dev Caddy config (trusted-headers proxy)
+│   ├── docker-compose.prod.yml # Production compose: Caddy + API with forward-auth
+│   └── entrypoint.sh           # Container startup script
 ├── frontend/               # Vue.js 3 SPA (Vite + Tailwind CSS v4 + shadcn-vue)
 │   └── src/
 │       ├── assets/         # index.css — Tailwind entry + shadcn design tokens
@@ -54,6 +57,7 @@ sharetree/
 │   ├── models/all.py       # AccessCode ORM model
 │   ├── api/
 │   │   ├── health.py       # GET /api/v1/health
+│   │   ├── auth.py         # GET /api/v1/auth — forward-auth endpoint for reverse proxy
 │   │   ├── access.py       # GET/POST /api/v1/access*
 │   │   ├── browse.py       # GET /api/v1/browse[/{path}]
 │   │   ├── download.py     # GET /download/{path}
@@ -148,6 +152,7 @@ Base prefix: `/api/v1`
 | Method | Path | Description |
 |---|---|---|
 | GET | `/health` | Returns `{"status": "ok"}` |
+| GET | `/auth` | Forward-auth check for reverse proxy; validates `X-Forwarded-Uri` against session access codes |
 | GET | `/access` | Returns active access codes and accessible paths from session |
 | POST | `/access/activate` | Validates and adds an access code to the session |
 | GET | `/browse` | Lists root directory (filtered by session access codes) |
@@ -243,7 +248,27 @@ The app always listens on **port 8000**. The image supports two admin auth modes
 
 Volumes: `/data` (database), `/files` (shared files). Health check: `GET /api/v1/health`.
 
+### Production with Caddy (forward-auth)
+
+`docker/docker-compose.prod.yml` provides a ready-to-use production setup where Caddy serves file downloads **directly from the filesystem**, bypassing Python for file I/O. Python only handles the auth check at `GET /api/v1/auth`.
+
+```
+User → Caddy → GET /api/v1/auth (Python checks session)
+                   ↓ 200 OK
+             Caddy serves /files/<path> directly
+```
+
+Caddy's `forward_auth` directive forwards the session cookie to the auth endpoint. The `X-Forwarded-Uri` header carries the original request path (e.g. `/download/path/to/file.pdf`), which the endpoint uses to resolve and validate the file against the user's access patterns.
+
+```bash
+cd docker
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Set `SHARETREE_FILES_PATH` to the host directory containing the files to share (default: `../files`). Both the Caddy and API containers mount this path at `/files`.
+
+> **Note:** If you change `SHARETREE_SHARE_ROOT` from its default (`/files`), update the `root * /files` and `uri strip_prefix /download` directives in `docker/Caddyfile` accordingly.
+
 ## Not Yet Implemented
 
-- Forward-auth API endpoint (for reverse proxy integration)
 - Redis support
