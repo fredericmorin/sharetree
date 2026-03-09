@@ -7,7 +7,7 @@ import CardTitle from '@/components/ui/card/CardTitle.vue'
 import CardDescription from '@/components/ui/card/CardDescription.vue'
 import CardContent from '@/components/ui/card/CardContent.vue'
 import Button from '@/components/ui/button/index.vue'
-import { ShieldCheck, Users, FolderOpen } from 'lucide-vue-next'
+import { ShieldCheck, Users, FolderOpen, KeyRound } from 'lucide-vue-next'
 
 const router = useRouter()
 
@@ -42,6 +42,10 @@ onMounted(checkAuth)
       </CardHeader>
 
       <CardContent class="flex flex-col gap-2">
+        <Button variant="outline" class="w-full justify-start gap-2" @click="router.push('/admin/access/create')">
+          <KeyRound class="h-4 w-4" />
+          Create access code
+        </Button>
         <Button variant="outline" class="w-full justify-start gap-2" @click="router.push('/admin/browse')">
           <FolderOpen class="h-4 w-4" />
           Browse files &amp; create access codes
