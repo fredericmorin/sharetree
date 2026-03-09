@@ -21,6 +21,19 @@ def client() -> TestClient:
 
 
 @pytest.fixture()
+def client_with_session() -> TestClient:
+    """TestClient with a session_id already established."""
+    client = TestClient(app, raise_server_exceptions=False)
+    with (
+        patch("sharetree.api.access.access_service.is_access_code_active_for_session", return_value=False),
+        patch("sharetree.api.access.access_service.is_access_code_unclaimed", return_value=True),
+        patch("sharetree.api.access.access_service.set_access_code_session"),
+    ):
+        client.post("/api/v1/access/activate", json={"code": "session-init"})
+    return client
+
+
+@pytest.fixture()
 def root(tmp_path: Path) -> Path:
     (tmp_path / "report.pdf").write_bytes(b"%PDF")
     (tmp_path / "docs").mkdir()
@@ -51,32 +64,31 @@ def test_empty_path_returns_400(client: TestClient) -> None:
 
 
 def test_no_session_codes_returns_403(client: TestClient) -> None:
-    with patch("sharetree.api.auth.access_service.resolve_access_code_paths", return_value=_EMPTY_ACCESS):
-        resp = client.get(AUTH_URL, headers={"X-Forwarded-Uri": "/report.pdf"})
+    resp = client.get(AUTH_URL, headers={"X-Forwarded-Uri": "/report.pdf"})
     assert resp.status_code == 403
 
 
-def test_allowed_file_returns_200(client: TestClient) -> None:
-    with patch("sharetree.api.auth.access_service.resolve_access_code_paths", return_value=_FULL_ACCESS):
-        resp = client.get(AUTH_URL, headers={"X-Forwarded-Uri": "/report.pdf"})
+def test_allowed_file_returns_200(client_with_session: TestClient) -> None:
+    with patch("sharetree.api.auth.access_service.get_session_access_codes", return_value=_FULL_ACCESS):
+        resp = client_with_session.get(AUTH_URL, headers={"X-Forwarded-Uri": "/report.pdf"})
     assert resp.status_code == 200
     assert resp.json()["allowed"] is True
 
 
-def test_pattern_mismatch_returns_403(client: TestClient) -> None:
-    with patch("sharetree.api.auth.access_service.resolve_access_code_paths", return_value=_DOCS_ACCESS):
-        resp = client.get(AUTH_URL, headers={"X-Forwarded-Uri": "/report.pdf"})
+def test_pattern_mismatch_returns_403(client_with_session: TestClient) -> None:
+    with patch("sharetree.api.auth.access_service.get_session_access_codes", return_value=_DOCS_ACCESS):
+        resp = client_with_session.get(AUTH_URL, headers={"X-Forwarded-Uri": "/report.pdf"})
     assert resp.status_code == 403
 
 
-def test_file_not_found_returns_404(client: TestClient) -> None:
-    with patch("sharetree.api.auth.access_service.resolve_access_code_paths", return_value=_FULL_ACCESS):
-        resp = client.get(AUTH_URL, headers={"X-Forwarded-Uri": "/missing.pdf"})
+def test_file_not_found_returns_404(client_with_session: TestClient) -> None:
+    with patch("sharetree.api.auth.access_service.get_session_access_codes", return_value=_FULL_ACCESS):
+        resp = client_with_session.get(AUTH_URL, headers={"X-Forwarded-Uri": "/missing.pdf"})
     assert resp.status_code == 404
 
 
-def test_allowed_nested_file_returns_200(client: TestClient) -> None:
-    with patch("sharetree.api.auth.access_service.resolve_access_code_paths", return_value=_DOCS_ACCESS):
-        resp = client.get(AUTH_URL, headers={"X-Forwarded-Uri": "/docs/guide.txt"})
+def test_allowed_nested_file_returns_200(client_with_session: TestClient) -> None:
+    with patch("sharetree.api.auth.access_service.get_session_access_codes", return_value=_DOCS_ACCESS):
+        resp = client_with_session.get(AUTH_URL, headers={"X-Forwarded-Uri": "/docs/guide.txt"})
     assert resp.status_code == 200
     assert resp.json()["allowed"] is True

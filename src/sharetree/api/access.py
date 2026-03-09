@@ -29,10 +29,12 @@ class MeResponse(BaseModel):
     response_model=ResponseModel[MeResponse],
 )
 async def get_me(request: Request, remote_groups: str | None = Header(default=None)) -> ResponseModel[MeResponse]:
-    codes: list[str] = request.session.get("access_codes", [])
-    codes = access_service.prune_invalid_access_codes(codes)
-    request.session["access_codes"] = codes
-    active_access_codes = access_service.resolve_access_code_paths(codes)
+    session_id: str | None = request.session.get("session_id")
+    active_access_codes = (
+        access_service.get_session_access_codes(session_id)
+        if session_id
+        else access_service.ActiveAccessCodes(valid_active_codes=[], accessible_paths=[], active_code_details=[])
+    )
     is_admin = check_is_admin(request, remote_groups)
     return ResponseModel(
         data=MeResponse.model_construct(
@@ -63,19 +65,13 @@ def _get_or_create_session_id(request: Request) -> str:
 
 @router.post("/activate", response_model=ResponseModel[None])
 async def activate_access_code(body: AccessCodeRequest, request: Request, response: Response) -> ResponseModel[None]:
-    previous_codes: list[str] = request.session.get("access_codes", [])
+    session_id = _get_or_create_session_id(request)
 
-    if body.code not in previous_codes and not access_service.is_access_code_unclaimed(body.code):
-        raise APIException(AccessCodeExceptionCode.ACCESS_CODE_NOT_FOUND, http_status_code=404)
-
-    valid_codes = access_service.prune_invalid_access_codes([body.code, *previous_codes])
-
-    if body.code in previous_codes:
-        request.session["access_codes"] = valid_codes
+    if access_service.is_access_code_active_for_session(body.code, session_id):
         return ResponseModel(error_code="ALREADY_ACTIVE")
 
-    request.session["access_codes"] = valid_codes
+    if not access_service.is_access_code_unclaimed(body.code):
+        raise APIException(AccessCodeExceptionCode.ACCESS_CODE_NOT_FOUND, http_status_code=404)
 
-    session_id = _get_or_create_session_id(request)
     access_service.set_access_code_session(body.code, session_id)
     return ResponseModel()

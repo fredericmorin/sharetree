@@ -16,8 +16,8 @@ class BrowseResponse(BaseModel):
 @router.get("/{path:path}", response_model=BrowseResponse)
 @router.get("", response_model=BrowseResponse)
 async def list_directory(request: Request, path: str = "") -> BrowseResponse:
-    codes: list[str] = request.session.get("access_codes", [])
-    patterns: list[str] = access_service.resolve_access_code_paths(codes)["accessible_paths"]
+    session_id: str | None = request.session.get("session_id")
+    patterns: list[str] = access_service.get_session_access_codes(session_id)["accessible_paths"] if session_id else []
 
     entries = browse_service.list_directory_entries(path, patterns)
 

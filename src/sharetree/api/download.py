@@ -9,8 +9,8 @@ router = APIRouter(prefix="/download")
 
 @router.get("/{path:path}")
 async def download_file(request: Request, path: str) -> FileResponse:
-    codes: list[str] = request.session.get("access_codes", [])
-    patterns: list[str] = access_service.resolve_access_code_paths(codes)["accessible_paths"]
+    session_id: str | None = request.session.get("session_id")
+    patterns: list[str] = access_service.get_session_access_codes(session_id)["accessible_paths"] if session_id else []
 
     file_path = browse_service.get_file_path(path, patterns)
 

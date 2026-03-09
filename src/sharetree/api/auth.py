@@ -37,10 +37,10 @@ async def forward_auth(
     if not path:
         raise HTTPException(status_code=400, detail="Empty file path")
 
-    codes: list[str] = request.session.get("access_codes", [])
-    codes = access_service.prune_invalid_access_codes(codes)
-    request.session["access_codes"] = codes
-    patterns: list[str] = access_service.resolve_access_code_paths(codes)["accessible_paths"]
+    session_id: str | None = request.session.get("session_id")
+    active = access_service.get_session_access_codes(session_id) if session_id else None
+    codes: list[str] = active["valid_active_codes"] if active else []
+    patterns: list[str] = active["accessible_paths"] if active else []
 
     request.state.extras = dict(
         auth_codes=codes,

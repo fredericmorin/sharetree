@@ -18,27 +18,6 @@ class ActiveAccessCodes(TypedDict):
     active_code_details: list[ActiveCodeDetail]
 
 
-def resolve_access_code_paths(access_codes: list[str]) -> ActiveAccessCodes:
-    with get_session() as session:
-        rows = session.query(AccessCode).filter(AccessCode.code.in_(access_codes)).all()
-    all_paths: set[str] = set()
-    details: list[ActiveCodeDetail] = []
-    for row in rows:
-        all_paths.update(row.patterns)
-        details.append(ActiveCodeDetail(code=row.code, nick=row.nick, patterns=row.patterns))
-    return ActiveAccessCodes(
-        valid_active_codes=[row.code for row in rows],
-        accessible_paths=list(all_paths),
-        active_code_details=details,
-    )
-
-
-def prune_invalid_access_codes(access_codes: list[str]) -> list[str]:
-    with get_session() as session:
-        rows = session.query(AccessCode.code).filter(AccessCode.code.in_(access_codes)).all()
-    return [row.code for row in rows]
-
-
 def is_access_code_unclaimed(code: str) -> bool:
     """Return True if the code exists and has not yet been claimed by any session."""
     with get_session() as session:
@@ -102,6 +81,31 @@ def duplicate_access_code(code: str) -> str | None:
         session.add(new_entry)
         session.commit()
     return new_code
+
+
+def get_session_access_codes(session_id: str) -> ActiveAccessCodes:
+    """Return all access codes and their paths for a given session_id."""
+    with get_session() as session:
+        rows = session.query(AccessCode).filter(AccessCode.session_id == session_id).all()
+    all_paths: set[str] = set()
+    details: list[ActiveCodeDetail] = []
+    for row in rows:
+        all_paths.update(row.patterns)
+        details.append(ActiveCodeDetail(code=row.code, nick=row.nick, patterns=row.patterns))
+    return ActiveAccessCodes(
+        valid_active_codes=[row.code for row in rows],
+        accessible_paths=list(all_paths),
+        active_code_details=details,
+    )
+
+
+def is_access_code_active_for_session(code: str, session_id: str) -> bool:
+    """Return True if the code is already claimed by this session."""
+    with get_session() as session:
+        return (
+            session.query(AccessCode.code).filter(AccessCode.code == code, AccessCode.session_id == session_id).first()
+            is not None
+        )
 
 
 def set_access_code_session(code: str, session_id: str) -> None:
