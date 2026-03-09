@@ -31,7 +31,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     yield
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    lifespan=lifespan,
+    docs_url="/docs" if settings.DEV else None,
+    redoc_url="/redoc" if settings.DEV else None,
+)
 app.add_middleware(LoggingMiddleware)  # type: ignore[arg-type]
 app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET)  # type: ignore[arg-type]
 register_exception_handlers(app)  # consistent error and success api responses
