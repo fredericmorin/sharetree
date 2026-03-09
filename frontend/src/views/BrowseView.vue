@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useDebounceFn, useEventListener, useClipboard } from '@vueuse/core'
+import { useDebounceFn, useEventListener } from '@vueuse/core'
 import Breadcrumbs from '@/components/Breadcrumbs.vue'
 import EntryList from '@/components/EntryList.vue'
 import Input from '@/components/ui/input/index.vue'
@@ -9,7 +9,7 @@ import Button from '@/components/ui/button/index.vue'
 import Skeleton from '@/components/ui/skeleton/index.vue'
 import Badge from '@/components/ui/badge/index.vue'
 import Separator from '@/components/ui/separator/index.vue'
-import { Search, AlertCircle, RefreshCw, Copy, Check, KeyRound, ShieldCheck } from 'lucide-vue-next'
+import { Search, AlertCircle, RefreshCw, KeyRound, ShieldCheck } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -25,7 +25,6 @@ const isAdmin = ref(false)
 const newCode = ref('')
 const codeError = ref(null)
 const submitting = ref(false)
-const { copy, copied, isSupported: clipboardSupported } = useClipboard()
 
 const currentPath = computed(() => {
   const p = route.params.path
@@ -171,7 +170,7 @@ onMounted(() => {
           >
             <div class="flex items-center gap-2 min-w-0">
               <p class="text-sm font-medium text-muted-foreground">{{ detail.nick }} ({{ detail.code }})</p>
-              <Badge v-for="pattern in detail.patterns" variant="secondary" class="shrink-0">{{ pattern }}</Badge>
+              <Badge v-for="pattern in detail.patterns" :key="pattern" variant="secondary" class="shrink-0">{{ pattern }}</Badge>
             </div>
           </li>
         </ul>

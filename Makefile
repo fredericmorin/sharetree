@@ -6,20 +6,25 @@ dev:
 .PHONY: frontend
 frontend: static/index.html
 
-static/index.html:
-	cd frontend && npm install && npm run build
+static/index.html: frontend/node_modules
+	cd frontend && npm run build
+
+frontend/node_modules: frontend/package.json frontend/package-lock.json
+	cd frontend && npm install
+	@touch frontend/node_modules
 
 .PHONY: check
-check: .venv/install
+check: .venv frontend/node_modules
 	.venv/bin/uv run ruff format
 	.venv/bin/uv run ruff check --fix
 	.venv/bin/uv run ty check
 	.venv/bin/uv run pytest
+	cd frontend && npm run lint
 
-.venv/install: .venv/bin/uv pyproject.toml uv.lock
+.venv: .venv/bin/uv pyproject.toml uv.lock
 	@echo "Installing dependencies..."
 	.venv/bin/uv sync --all-extras
-	@touch .venv/install
+	@touch .venv
 
 .venv/bin/uv: .venv/bin/python
 	.venv/bin/pip install uv
@@ -38,11 +43,12 @@ docker-build:
 .PHONY: upgrade
 upgrade: .venv/bin/uv
 	.venv/bin/uv lock --upgrade
+	cd frontend && npm update
 
 .PHONY: migrate
-migrate: .venv/install
+migrate: .venv
 	alembic upgrade head
 
 .PHONY: migration
-migration: .venv/install
+migration: .venv
 	alembic revision --autogenerate -m "$(msg)"
