@@ -1,9 +1,59 @@
 {
 	# Disable Caddy's admin API in production containers.
 	admin off
+
+	# WAF handler must run before all other handlers.
+	order coraza_waf first
 }
 
 :80 {
+	# WAF — Coraza with OWASP Core Rule Set, applied globally before routing.
+	# SecRuleEngine On = blocking mode. Change to DetectionOnly for a safe initial rollout.
+	coraza_waf {
+		load_owasp_crs
+		directives `
+			Include @coraza.conf-recommended
+			Include @crs-setup.conf.example
+			Include @owasp_crs/*.conf
+			SecRuleEngine On
+		`
+	}
+
+	# Rate limiting on brute-force endpoints.
+	rate_limit {
+		# Zone 1: access code activation — 5 attempts per IP per minute.
+		# A legitimate user activates a code once; this stops automated guessing.
+		zone access_activate {
+			match {
+				method POST
+				path /api/v1/access/activate
+			}
+			key    {http.request.remote_ip}
+			window 1m
+			events 5
+		}
+
+		# Zone 2: admin login — 10 attempts per IP per 5 minutes.
+		# Slightly more generous to allow for mistyped passwords, but the longer
+		# window keeps the effective rate low (~2/min).
+		zone admin_login {
+			match {
+				method POST
+				path /api/v1/admin/login
+			}
+			key    {http.request.remote_ip}
+			window 5m
+			events 10
+		}
+	}
+
+	# Reject oversized request bodies on all endpoints.
+	# 10 MB is generous for any legitimate API call in this app.
+	# Responds with HTTP 413 if exceeded.
+	request_body {
+		max_size 10MB
+	}
+
 	# Forward-auth for downloads: Caddy verifies access with Python, then serves
 	# the file directly from the filesystem — Python is not in the I/O path.
 	handle /download/* {

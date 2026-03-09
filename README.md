@@ -36,6 +36,9 @@ See [CLAUDE.md](CLAUDE.md) for full developer documentation.
 
 - [x] Docker — multi-stage image with frontend build
 - [x] Caddy production compose — forward-auth offloads file I/O from Python to Caddy
+  - [x] WAF — Coraza with OWASP CRS rules (blocking mode, `coraza-caddy` plugin)
+  - [x] Rate limiting — per-IP limits on brute-force endpoints (`caddy-ratelimit` plugin)
+  - [x] Upload size limits — 10 MB max request body (`request_body` directive)
 - [ ] Redis session store
 
 ### Docker
@@ -48,7 +51,7 @@ The app always listens on **port 8000**. Admin authentication works in two modes
 
 #### Production: Caddy with forward-auth (recommended)
 
-`docker/docker-compose.prod.yml` wires Caddy as a TLS-terminating reverse proxy that serves file downloads **directly from the filesystem** — Python only handles the authorization check via `GET /api/v1/auth`. This eliminates Python from the file I/O path.
+`docker/docker-compose.prod.yml` wires Caddy as a TLS-terminating reverse proxy that serves file downloads **directly from the filesystem** — Python only handles the authorization check via `GET /api/v1/auth`. This eliminates Python from the file I/O path. The setup also includes a Coraza WAF (OWASP CRS), rate limiting on brute-force endpoints, and a 10 MB upload size cap, all configured in `docker/Caddyfile`.
 
 ```sh
 cd docker
@@ -71,7 +74,7 @@ Caddy handles HTTPS automatically (Let's Encrypt). For HTTP-only or custom TLS, 
 Admin routes are protected by a session-based login page at `/admin/login`.
 Set `SHARETREE_ADMIN_PASSWORD` to the desired admin password.
 
-> **Rate limiting:** The app does not implement rate limiting on the login endpoint. In default mode, protect against brute-force attacks by placing sharetree behind a reverse proxy (nginx, Caddy, Traefik) and configuring request rate limits there.
+> **Rate limiting and WAF:** The production Caddy compose (`docker/docker-compose.prod.yml`) includes rate limiting on brute-force endpoints and a Coraza WAF with OWASP CRS rules. If you deploy without Caddy, place sharetree behind a reverse proxy with rate limiting configured there.
 
 ```yaml
 services:

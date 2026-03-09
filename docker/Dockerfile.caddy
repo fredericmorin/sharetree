@@ -1,0 +1,22 @@
+# Custom Caddy build with security plugins:
+#   - caddy-ratelimit: request rate limiting per IP on brute-force endpoints
+#   - coraza-caddy:   Coraza WAF with OWASP CRS rules (blocking mode)
+#
+# Build with:
+#   docker compose -f docker-compose.prod.yml build caddy
+#
+# Note: xcaddy requires ~1 GB RAM during compilation.
+
+# Stage 1: compile Caddy with the required plugins.
+FROM caddy:2-builder AS builder
+
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    xcaddy build \
+        --with github.com/mholt/caddy-ratelimit \
+        --with github.com/corazawaf/coraza-caddy/v2
+
+# Stage 2: copy the custom binary into the standard Alpine runtime.
+FROM caddy:2-alpine
+
+COPY --from=builder /usr/bin/caddy /usr/bin/caddy
