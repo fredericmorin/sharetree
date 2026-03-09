@@ -14,6 +14,13 @@
 #   docker compose -f docker-compose.prod.yml up -d
 
 services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    command: redis-server --save 60 1 --loglevel warning
+
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
@@ -38,6 +45,11 @@ services:
       # Set to "true" to trust Remote-Groups header from an upstream proxy instead
       # of using the built-in login page.
       SHARETREE_TRUST_HEADERS: ${SHARETREE_TRUST_HEADERS:-false}
+      # Optional: enable Redis-backed sessions (recommended for multi-instance deployments).
+      # Leave unset to use the default encrypted-cookie sessions.
+      SHARETREE_REDIS_URL: ${SHARETREE_REDIS_URL:-redis://redis:6379/0}
+    depends_on:
+      - redis
     volumes:
       - sharetree_data:/data
       # Read-only: the app resolves paths and checks access but does not serve bytes.
@@ -47,3 +59,4 @@ volumes:
   caddy_data:
   caddy_config:
   sharetree_data:
+  redis_data:

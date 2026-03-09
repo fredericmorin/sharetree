@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     TRUST_HEADERS: bool = False
     ADMIN_PASSWORD: str | None = None
     DEV: bool = True
+    REDIS_URL: str | None = None
 
 
 @lru_cache

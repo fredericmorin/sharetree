@@ -30,12 +30,13 @@ See [CLAUDE.md](CLAUDE.md) for full developer documentation.
   - [x] Admin page to browse claims grouped by session with pagination
 - [x] Admin file browser — browse the full server file tree and create access codes from any file or folder
 - [x] Forward-auth API endpoint — lets a reverse proxy (Caddy) serve file downloads directly from the filesystem
+- [x] Redis session store — optional server-side sessions; falls back to encrypted-cookie sessions when not configured
 
 ## Deploy
 
 - [x] Docker — multi-stage image with frontend build
 - [x] Caddy production compose — forward-auth offloads file I/O from Python to Caddy
-- [ ] Redis session store
+- [x] Redis session store
 
 ### Docker
 
@@ -130,6 +131,7 @@ docker compose up -d
 | `SHARETREE_TRUST_HEADERS` | no | `false` | Trust `Remote-Groups` header from upstream proxy; disables the admin login page |
 | `SHARETREE_SHARE_ROOT` | no | `/files` | Path to the folder tree to share (mount a volume here) |
 | `SHARETREE_DATA_PATH` | no | `/data` | Path where the SQLite database is stored (mount a volume here) |
+| `SHARETREE_REDIS_URL` | no | — | Redis connection URL (e.g. `redis://localhost:6379/0`). When set, sessions are stored server-side in Redis instead of encrypted cookies. Recommended for multi-instance deployments. |
 
 ## Refs
 

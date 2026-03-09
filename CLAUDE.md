@@ -53,6 +53,7 @@ sharetree/
 │   ├── __main__.py         # CLI entry point; starts uvicorn on :8000
 │   ├── app.py              # FastAPI app, middleware, router registration
 │   ├── db.py               # SQLAlchemy engine, session factory, run_migrations()
+│   ├── session.py          # RedisSessionMiddleware; make_session_middleware() selects backend
 │   ├── settings.py         # pydantic-settings config (SHARETREE_ prefix)
 │   ├── models/all.py       # AccessCode ORM model
 │   ├── api/
@@ -103,6 +104,7 @@ SHARETREE_SESSION_SECRET=<random-secret>   # required
 SHARETREE_SHARE_ROOT=files                 # optional, default: files/
 SHARETREE_DATA_PATH=data                   # optional, default: data/
 SHARETREE_DEV=true                         # optional, enables uvicorn auto-reload
+SHARETREE_REDIS_URL=redis://localhost:6379/0  # optional; enables Redis-backed sessions
 ```
 
 `SESSION_SECRET` is the only required variable.
@@ -245,6 +247,7 @@ The app always listens on **port 8000**. The image supports two admin auth modes
 | `SHARETREE_TRUST_HEADERS` | no | `false` | Trust `Remote-Groups` header from upstream proxy; disables login page |
 | `SHARETREE_SHARE_ROOT` | no | `/files` | Path to shared folder tree (mount a volume) |
 | `SHARETREE_DATA_PATH` | no | `/data` | Path to SQLite database directory (mount a volume) |
+| `SHARETREE_REDIS_URL` | no | — | Redis URL (e.g. `redis://localhost:6379/0`). Enables server-side Redis sessions; falls back to encrypted-cookie sessions when unset. |
 
 Volumes: `/data` (database), `/files` (shared files). Health check: `GET /api/v1/health`.
 
@@ -271,4 +274,4 @@ Set `SHARETREE_FILES_PATH` to the host directory containing the files to share (
 
 ## Not Yet Implemented
 
-- Redis support
+- (nothing currently planned)

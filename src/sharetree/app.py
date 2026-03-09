@@ -8,7 +8,6 @@ from api_exception import register_exception_handlers
 from fastapi import APIRouter, Depends, FastAPI
 from fastapi.responses import FileResponse
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
-from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
@@ -75,7 +74,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(LoggingMiddleware)  # type: ignore[arg-type]
-app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET)  # type: ignore[arg-type]
+if settings.REDIS_URL:
+    from sharetree.session import RedisSessionMiddleware
+
+    app.add_middleware(RedisSessionMiddleware, redis_url=settings.REDIS_URL)  # type: ignore[arg-type]
+else:
+    from starlette.middleware.sessions import SessionMiddleware
+
+    app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET)  # type: ignore[arg-type]
 register_exception_handlers(app)  # consistent error and success api responses
 
 api = APIRouter(prefix="/api/v1")
