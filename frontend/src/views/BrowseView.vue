@@ -144,7 +144,7 @@ onMounted(() => {
     </div>
 
     <template v-else>
-      <div v-if="entries.length > 0" class="relative mb-4">
+      <div v-if="entries.length > 50" class="relative mb-4">
         <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
         <Input
           ref="searchInputRef"
@@ -180,7 +180,7 @@ onMounted(() => {
       <div>
         <div class="flex items-center gap-2 mb-3">
           <KeyRound class="h-4 w-4 text-muted-foreground" />
-          <p class="text-sm font-medium text-muted-foreground">Add access code</p>
+          <p class="text-sm font-medium text-muted-foreground">Activate additional access code</p>
         </div>
         <form @submit.prevent="activateCode" class="flex gap-2">
           <Input

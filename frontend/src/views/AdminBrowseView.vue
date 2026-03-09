@@ -158,7 +158,7 @@ onMounted(async () => {
 
     <template v-else>
       <!-- Search -->
-      <div v-if="entries.length > 0" class="relative mb-4">
+      <div v-if="entries.length > 50" class="relative mb-4">
         <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
         <Input
           :model-value="searchQuery"
