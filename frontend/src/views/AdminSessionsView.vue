@@ -1,11 +1,6 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import Card from '@/components/ui/card/index.vue'
-import CardHeader from '@/components/ui/card/CardHeader.vue'
-import CardTitle from '@/components/ui/card/CardTitle.vue'
-import CardDescription from '@/components/ui/card/CardDescription.vue'
-import CardContent from '@/components/ui/card/CardContent.vue'
 import Button from '@/components/ui/button/index.vue'
 import Badge from '@/components/ui/badge/index.vue'
 import Skeleton from '@/components/ui/skeleton/index.vue'
@@ -110,39 +105,42 @@ onMounted(async () => {
       No sessions have claimed any access codes yet.
     </p>
 
-    <!-- Session list -->
-    <div v-else class="flex flex-col gap-4">
-      <Card v-for="group in sessions" :key="group.session_id ?? '__null__'">
-        <CardHeader class="pb-2">
-          <CardTitle class="font-mono text-sm font-medium text-muted-foreground">
-            {{ group.session_id ?? '(no session)' }}
-          </CardTitle>
-          <CardDescription>
-            {{ group.codes.length }} access code{{ group.codes.length !== 1 ? 's' : '' }}
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent>
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="border-b text-left text-muted-foreground">
-                <th class="pb-1 pr-4 font-medium">Code</th>
-                <th class="pb-1 font-medium">Nick</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="entry in group.codes"
-                :key="entry.code"
-                class="border-b last:border-0"
-              >
-                <td class="py-1 pr-4 font-mono">{{ entry.code }}</td>
-                <td class="py-1 text-muted-foreground">{{ entry.nick ?? '—' }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
+    <!-- Session table -->
+    <div v-else class="overflow-x-auto rounded-md border">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b bg-muted/50 text-left text-xs text-muted-foreground">
+            <th class="px-3 py-2 font-medium">Session</th>
+            <th class="px-3 py-2 font-medium">Code</th>
+            <th class="px-3 py-2 font-medium">Nick</th>
+            <th class="px-3 py-2 font-medium">Patterns</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template v-for="group in sessions" :key="group.session_id ?? '__null__'">
+            <tr
+              v-for="(entry, i) in group.codes"
+              :key="entry.code"
+              class="border-b last:border-0 hover:bg-muted/30"
+            >
+              <td class="px-3 py-1.5 font-mono text-xs text-muted-foreground align-top">
+                <span v-if="i === 0">{{ group.session_id ?? '(no session)' }}</span>
+              </td>
+              <td class="px-3 py-1.5 font-mono text-xs align-top">{{ entry.code }}</td>
+              <td class="px-3 py-1.5 text-xs text-muted-foreground align-top">{{ entry.nick ?? '—' }}</td>
+              <td class="px-3 py-1.5 align-top">
+                <div class="flex flex-wrap gap-1">
+                  <code
+                    v-for="pattern in entry.patterns"
+                    :key="pattern"
+                    class="rounded bg-muted px-1 py-0.5 text-xs font-mono"
+                  >{{ pattern }}</code>
+                </div>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
     </div>
 
     <!-- Pagination controls -->

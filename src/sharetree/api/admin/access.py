@@ -29,6 +29,7 @@ async def create_access_code(body: CreateAccessCodeRequest) -> ResponseModel[Cre
 class SessionCodeEntry(BaseModel):
     code: str
     nick: str | None
+    patterns: list[str]
 
 
 class SessionGroup(BaseModel):
@@ -51,7 +52,9 @@ async def list_sessions(page: int = Query(1, ge=1)) -> ResponseModel[SessionsPag
             sessions=[
                 SessionGroup(
                     session_id=g["session_id"],
-                    codes=[SessionCodeEntry(code=c["code"], nick=c["nick"]) for c in g["codes"]],
+                    codes=[
+                        SessionCodeEntry(code=c["code"], nick=c["nick"], patterns=c["patterns"]) for c in g["codes"]
+                    ],
                 )
                 for g in result["sessions"]
             ],

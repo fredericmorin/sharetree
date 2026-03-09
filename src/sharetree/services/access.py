@@ -70,6 +70,7 @@ def set_access_code_session(code: str, session_id: str) -> None:
 class SessionCodeEntry(TypedDict):
     code: str
     nick: str | None
+    patterns: list[str]
 
 
 class SessionGroup(TypedDict):
@@ -127,7 +128,7 @@ def list_sessions_page(page: int, page_size: int) -> SessionsPage:
     # Group by session_id in Python
     groups: dict[str | None, list[SessionCodeEntry]] = {sid: [] for sid in page_session_ids}
     for row in codes_rows:
-        groups[row.session_id].append(SessionCodeEntry(code=row.code, nick=row.nick))
+        groups[row.session_id].append(SessionCodeEntry(code=row.code, nick=row.nick, patterns=row.patterns))
 
     sessions: list[SessionGroup] = [SessionGroup(session_id=sid, codes=groups[sid]) for sid in page_session_ids]
 
