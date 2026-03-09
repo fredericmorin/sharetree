@@ -11,7 +11,7 @@ import Breadcrumb from '@/components/ui/breadcrumb/index.vue'
 import BreadcrumbList from '@/components/ui/breadcrumb/BreadcrumbList.vue'
 import BreadcrumbItem from '@/components/ui/breadcrumb/BreadcrumbItem.vue'
 import BreadcrumbPage from '@/components/ui/breadcrumb/BreadcrumbPage.vue'
-import { ShieldCheck, Users, FolderOpen, KeyRound } from 'lucide-vue-next'
+import { ShieldCheck, Users, FolderOpen, KeyRound, ScrollText } from 'lucide-vue-next'
 
 const router = useRouter()
 
@@ -68,6 +68,10 @@ onMounted(checkAuth)
           <Button variant="outline" class="w-full justify-start gap-2" @click="router.push('/admin/sessions')">
             <Users class="h-4 w-4" />
             View session claims
+          </Button>
+          <Button variant="outline" class="w-full justify-start gap-2" @click="router.push('/admin/logs')">
+            <ScrollText class="h-4 w-4" />
+            View download logs
           </Button>
         </CardContent>
       </Card>

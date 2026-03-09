@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     TRUST_HEADERS: bool = False
     ADMIN_PASSWORD: str | None = None
     DEV: bool = False
+    DOWNLOAD_LOG_MAX_BYTES: int = 52_428_800  # 50 MB
+    DOWNLOAD_LOG_BACKUP_COUNT: int = 5
 
 
 @lru_cache
