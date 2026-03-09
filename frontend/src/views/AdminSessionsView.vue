@@ -4,6 +4,13 @@ import { useRouter, useRoute } from 'vue-router'
 import Button from '@/components/ui/button/index.vue'
 import Badge from '@/components/ui/badge/index.vue'
 import Skeleton from '@/components/ui/skeleton/index.vue'
+import Breadcrumb from '@/components/ui/breadcrumb/index.vue'
+import BreadcrumbList from '@/components/ui/breadcrumb/BreadcrumbList.vue'
+import BreadcrumbItem from '@/components/ui/breadcrumb/BreadcrumbItem.vue'
+import BreadcrumbLink from '@/components/ui/breadcrumb/BreadcrumbLink.vue'
+import BreadcrumbPage from '@/components/ui/breadcrumb/BreadcrumbPage.vue'
+import BreadcrumbSeparator from '@/components/ui/breadcrumb/BreadcrumbSeparator.vue'
+import { RouterLink } from 'vue-router'
 import { ChevronLeft, ChevronRight, ShieldCheck } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -84,6 +91,22 @@ onMounted(async () => {
 
 <template>
   <div class="mx-auto max-w-4xl px-4 py-8">
+    <div class="mb-6">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink as-child>
+              <RouterLink to="/admin" class="text-muted-foreground hover:text-foreground transition-colors no-underline">Admin</RouterLink>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Session claims</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+    </div>
+
     <div class="mb-6 flex items-center gap-2">
       <ShieldCheck class="h-5 w-5 text-muted-foreground" />
       <h1 class="text-2xl font-semibold">Session claims</h1>

@@ -19,9 +19,9 @@ import { Share2 } from 'lucide-vue-next'
     </header>
 
     <main class="mx-auto max-w-4xl px-4 sm:px-6 py-8">
-      <RouterView v-slot="{ Component }">
+      <RouterView v-slot="{ Component, route }">
         <Transition name="fade" mode="out-in">
-          <component :is="Component" />
+          <component :is="Component" :key="route.path" />
         </Transition>
       </RouterView>
     </main>

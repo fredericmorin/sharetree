@@ -7,7 +7,14 @@ import Input from '@/components/ui/input/index.vue'
 import Button from '@/components/ui/button/index.vue'
 import Badge from '@/components/ui/badge/index.vue'
 import Skeleton from '@/components/ui/skeleton/index.vue'
-import { Search, AlertCircle, RefreshCw, FolderOpen, House, FilePlus } from 'lucide-vue-next'
+import Breadcrumb from '@/components/ui/breadcrumb/index.vue'
+import BreadcrumbList from '@/components/ui/breadcrumb/BreadcrumbList.vue'
+import BreadcrumbItem from '@/components/ui/breadcrumb/BreadcrumbItem.vue'
+import BreadcrumbLink from '@/components/ui/breadcrumb/BreadcrumbLink.vue'
+import BreadcrumbPage from '@/components/ui/breadcrumb/BreadcrumbPage.vue'
+import BreadcrumbSeparator from '@/components/ui/breadcrumb/BreadcrumbSeparator.vue'
+import { RouterLink } from 'vue-router'
+import { Search, AlertCircle, RefreshCw, FolderOpen, FilePlus } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -114,25 +121,32 @@ onMounted(async () => {
 <template>
   <div>
     <!-- Breadcrumb header -->
-    <div class="flex items-center gap-1.5 text-sm mb-6">
-      <button
-        class="text-muted-foreground hover:text-foreground transition-colors"
-        @click="router.push('/admin/browse')"
-      >
-        <House class="h-4 w-4" />
-      </button>
-      <template v-for="(seg, i) in breadcrumbs" :key="seg.to">
-        <span class="text-muted-foreground">/</span>
-        <span
-          v-if="i === breadcrumbs.length - 1"
-          class="text-foreground font-medium"
-        >{{ seg.label }}</span>
-        <button
-          v-else
-          class="text-muted-foreground hover:text-foreground transition-colors"
-          @click="router.push(seg.to)"
-        >{{ seg.label }}</button>
-      </template>
+    <div class="mb-6">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink as-child>
+              <RouterLink to="/admin" class="text-muted-foreground hover:text-foreground transition-colors no-underline">Admin</RouterLink>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink v-if="breadcrumbs.length" as-child>
+              <RouterLink to="/admin/browse" class="text-muted-foreground hover:text-foreground transition-colors no-underline">Browse</RouterLink>
+            </BreadcrumbLink>
+            <BreadcrumbPage v-else>Browse</BreadcrumbPage>
+          </BreadcrumbItem>
+          <template v-for="(seg, i) in breadcrumbs" :key="seg.to">
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage v-if="i === breadcrumbs.length - 1">{{ seg.label }}</BreadcrumbPage>
+              <BreadcrumbLink v-else as-child>
+                <RouterLink :to="seg.to" class="text-muted-foreground hover:text-foreground transition-colors no-underline">{{ seg.label }}</RouterLink>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+          </template>
+        </BreadcrumbList>
+      </Breadcrumb>
     </div>
 
     <!-- Loading skeletons -->

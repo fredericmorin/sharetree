@@ -9,6 +9,13 @@ import CardDescription from '@/components/ui/card/CardDescription.vue'
 import CardContent from '@/components/ui/card/CardContent.vue'
 import Button from '@/components/ui/button/index.vue'
 import Input from '@/components/ui/input/index.vue'
+import Breadcrumb from '@/components/ui/breadcrumb/index.vue'
+import BreadcrumbList from '@/components/ui/breadcrumb/BreadcrumbList.vue'
+import BreadcrumbItem from '@/components/ui/breadcrumb/BreadcrumbItem.vue'
+import BreadcrumbLink from '@/components/ui/breadcrumb/BreadcrumbLink.vue'
+import BreadcrumbPage from '@/components/ui/breadcrumb/BreadcrumbPage.vue'
+import BreadcrumbSeparator from '@/components/ui/breadcrumb/BreadcrumbSeparator.vue'
+import { RouterLink } from 'vue-router'
 import { FilePlus, Copy, Check, ArrowLeft } from 'lucide-vue-next'
 
 const route = useRoute()
@@ -87,104 +94,122 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex justify-center pt-8">
-    <Card class="w-full max-w-lg">
-      <CardHeader>
-        <div class="flex items-center gap-2">
-          <FilePlus class="h-5 w-5 text-muted-foreground" />
-          <CardTitle class="text-xl">Create access code</CardTitle>
-        </div>
-        <CardDescription>
-          Generate a new access code with the specified glob patterns.
-        </CardDescription>
-      </CardHeader>
+  <div>
+    <div class="mb-6">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink as-child>
+              <RouterLink to="/admin" class="text-muted-foreground hover:text-foreground transition-colors no-underline">Admin</RouterLink>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Create access code</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+    </div>
 
-      <CardContent class="flex flex-col gap-4">
-        <!-- Success state -->
-        <template v-if="createdCode">
-          <div class="rounded-md border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950 p-4 flex flex-col gap-3">
-            <p class="text-sm font-medium text-green-800 dark:text-green-200">Access code created successfully</p>
-            <div class="flex items-center gap-2">
-              <code class="flex-1 font-mono text-sm bg-background rounded px-2 py-1 border truncate">
-                {{ createdCode.code }}
-              </code>
+    <div class="flex justify-center pt-8">
+      <Card class="w-full max-w-lg">
+        <CardHeader>
+          <div class="flex items-center gap-2">
+            <FilePlus class="h-5 w-5 text-muted-foreground" />
+            <CardTitle class="text-xl">Create access code</CardTitle>
+          </div>
+          <CardDescription>
+            Generate a new access code with the specified glob patterns.
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent class="flex flex-col gap-4">
+          <!-- Success state -->
+          <template v-if="createdCode">
+            <div class="rounded-md border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950 p-4 flex flex-col gap-3">
+              <p class="text-sm font-medium text-green-800 dark:text-green-200">Access code created successfully</p>
+              <div class="flex items-center gap-2">
+                <code class="flex-1 font-mono text-sm bg-background rounded px-2 py-1 border truncate">
+                  {{ createdCode.code }}
+                </code>
+                <Button
+                  v-if="clipboardSupported"
+                  variant="outline"
+                  size="icon"
+                  class="h-8 w-8 shrink-0"
+                  type="button"
+                  aria-label="Copy access code"
+                  @click="copy(createdCode.code)"
+                >
+                  <Check v-if="copied" class="h-3.5 w-3.5 text-green-500" />
+                  <Copy v-else class="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              <div v-if="createdCode.nick" class="text-sm text-muted-foreground">
+                Label: <span class="font-medium text-foreground">{{ createdCode.nick }}</span>
+              </div>
+              <div class="text-sm text-muted-foreground">
+                Patterns:
+                <ul class="mt-1 space-y-0.5">
+                  <li v-for="p in createdCode.patterns" :key="p" class="font-mono text-xs text-foreground">{{ p }}</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="flex gap-2">
+              <Button variant="outline" class="flex-1 gap-2" @click="router.back()">
+                <ArrowLeft class="h-4 w-4" />
+                Back to browse
+              </Button>
               <Button
-                v-if="clipboardSupported"
                 variant="outline"
-                size="icon"
-                class="h-8 w-8 shrink-0"
-                type="button"
-                aria-label="Copy access code"
-                @click="copy(createdCode.code)"
+                class="flex-1"
+                @click="() => { createdCode = null; error = null }"
               >
-                <Check v-if="copied" class="h-3.5 w-3.5 text-green-500" />
-                <Copy v-else class="h-3.5 w-3.5" />
+                Create another
               </Button>
             </div>
-            <div v-if="createdCode.nick" class="text-sm text-muted-foreground">
-              Label: <span class="font-medium text-foreground">{{ createdCode.nick }}</span>
+          </template>
+
+          <!-- Form -->
+          <template v-else>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-medium">Patterns <span class="text-muted-foreground font-normal">(one per line)</span></label>
+              <textarea
+                v-model="patterns"
+                rows="4"
+                placeholder="/reports/**"
+                class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                :disabled="submitting"
+              />
             </div>
-            <div class="text-sm text-muted-foreground">
-              Patterns:
-              <ul class="mt-1 space-y-0.5">
-                <li v-for="p in createdCode.patterns" :key="p" class="font-mono text-xs text-foreground">{{ p }}</li>
-              </ul>
+
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-medium">
+                Label <span class="text-muted-foreground font-normal">(optional)</span>
+              </label>
+              <Input
+                v-model="nick"
+                type="text"
+                placeholder="e.g. Q1 reports for Alice"
+                :disabled="submitting"
+              />
             </div>
-          </div>
 
-          <div class="flex gap-2">
-            <Button variant="outline" class="flex-1 gap-2" @click="router.back()">
-              <ArrowLeft class="h-4 w-4" />
-              Back to browse
-            </Button>
-            <Button
-              variant="outline"
-              class="flex-1"
-              @click="() => { createdCode = null; error = null }"
-            >
-              Create another
-            </Button>
-          </div>
-        </template>
+            <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
 
-        <!-- Form -->
-        <template v-else>
-          <div class="flex flex-col gap-1.5">
-            <label class="text-sm font-medium">Patterns <span class="text-muted-foreground font-normal">(one per line)</span></label>
-            <textarea
-              v-model="patterns"
-              rows="4"
-              placeholder="/reports/**"
-              class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
-              :disabled="submitting"
-            />
-          </div>
-
-          <div class="flex flex-col gap-1.5">
-            <label class="text-sm font-medium">
-              Label <span class="text-muted-foreground font-normal">(optional)</span>
-            </label>
-            <Input
-              v-model="nick"
-              type="text"
-              placeholder="e.g. Q1 reports for Alice"
-              :disabled="submitting"
-            />
-          </div>
-
-          <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
-
-          <div class="flex gap-2">
-            <Button variant="outline" class="gap-2" @click="router.back()">
-              <ArrowLeft class="h-4 w-4" />
-              Back
-            </Button>
-            <Button class="flex-1" :disabled="submitting || !patterns.trim()" @click="submit">
-              {{ submitting ? 'Creating…' : 'Create access code' }}
-            </Button>
-          </div>
-        </template>
-      </CardContent>
-    </Card>
+            <div class="flex gap-2">
+              <Button variant="outline" class="gap-2" @click="router.back()">
+                <ArrowLeft class="h-4 w-4" />
+                Back
+              </Button>
+              <Button class="flex-1" :disabled="submitting || !patterns.trim()" @click="submit">
+                {{ submitting ? 'Creating…' : 'Create access code' }}
+              </Button>
+            </div>
+          </template>
+        </CardContent>
+      </Card>
+    </div>
   </div>
 </template>
