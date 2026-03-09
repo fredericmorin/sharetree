@@ -69,6 +69,17 @@ def revoke_access_code(code: str) -> bool:
         return True
 
 
+def release_access_code(code: str) -> bool:
+    """Clear the session_id of an access code, making it claimable again. Returns False if not found."""
+    with get_session() as session:
+        row = session.get(AccessCode, code)
+        if row is None:
+            return False
+        row.session_id = None
+        session.commit()
+        return True
+
+
 def set_access_code_session(code: str, session_id: str) -> None:
     """Record which session first claimed this access code."""
     with get_session() as session:

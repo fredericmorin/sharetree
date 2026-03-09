@@ -11,7 +11,7 @@ import BreadcrumbLink from '@/components/ui/breadcrumb/BreadcrumbLink.vue'
 import BreadcrumbPage from '@/components/ui/breadcrumb/BreadcrumbPage.vue'
 import BreadcrumbSeparator from '@/components/ui/breadcrumb/BreadcrumbSeparator.vue'
 import { RouterLink } from 'vue-router'
-import { ChevronLeft, ChevronRight, ShieldCheck, Trash2 } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, ShieldCheck, Trash2, Unlink } from 'lucide-vue-next'
 
 const router = useRouter()
 const route = useRoute()
@@ -23,6 +23,7 @@ const totalPages = ref(1)
 const loading = ref(false)
 const error = ref(null)
 const revoking = ref(null)
+const releasing = ref(null)
 
 async function checkAuth() {
   try {
@@ -87,6 +88,23 @@ async function revokeCode(code) {
     }
   } finally {
     revoking.value = null
+  }
+}
+
+async function releaseCode(code) {
+  releasing.value = code
+  try {
+    const res = await fetch('/api/v1/admin/access/release', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
+    })
+    if (res.ok) {
+      await loadPage(page.value)
+    }
+  } finally {
+    releasing.value = null
   }
 }
 
@@ -180,15 +198,29 @@ onMounted(async () => {
                 </div>
               </td>
               <td class="px-3 py-1.5 align-top">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  class="h-6 w-6 text-muted-foreground hover:text-destructive"
-                  :disabled="revoking === entry.code"
-                  @click="revokeCode(entry.code)"
-                >
-                  <Trash2 class="h-3.5 w-3.5" />
-                </Button>
+                <div class="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    class="h-6 w-6 text-muted-foreground hover:text-destructive"
+                    :disabled="revoking === entry.code"
+                    @click="revokeCode(entry.code)"
+                    title="Revoke (delete)"
+                  >
+                    <Trash2 class="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    v-if="group.session_id !== null"
+                    variant="ghost"
+                    size="icon"
+                    class="h-6 w-6 text-muted-foreground hover:text-foreground"
+                    :disabled="releasing === entry.code"
+                    @click="releaseCode(entry.code)"
+                    title="Release (unlink from session)"
+                  >
+                    <Unlink class="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </td>
             </tr>
           </template>

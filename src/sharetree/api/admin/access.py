@@ -56,6 +56,18 @@ async def revoke_access_code(body: RevokeAccessCodeRequest) -> ResponseModel[Non
     return ResponseModel(data=None)
 
 
+class ReleaseAccessCodeRequest(BaseModel):
+    code: str
+
+
+@router.post("/release", response_model=ResponseModel[None])
+async def release_access_code(body: ReleaseAccessCodeRequest) -> ResponseModel[None]:
+    found = access_service.release_access_code(body.code)
+    if not found:
+        raise HTTPException(status_code=404, detail="Access code not found")
+    return ResponseModel(data=None)
+
+
 @router.get("/sessions", response_model=ResponseModel[SessionsPageResponse])
 async def list_sessions(page: int = Query(1, ge=1)) -> ResponseModel[SessionsPageResponse]:
     result = access_service.list_sessions_page(page=page, page_size=PAGE_SIZE)

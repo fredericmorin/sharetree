@@ -22,8 +22,9 @@ ADMIN_PASSWORD = "supersecret"
 # All protected admin endpoints: (method, path, json_body)
 PROTECTED_ADMIN_ENDPOINTS = [
     ("POST", "/api/v1/admin/access/create", {"patterns": ["/docs/*"], "nick": "test"}),
+    ("DELETE", "/api/v1/admin/access/revoke", {"patterns": ["/docs/*"], "nick": "test"}),
+    ("POST", "/api/v1/admin/access/release", {"patterns": ["/docs/*"], "nick": "test"}),
     ("GET", "/api/v1/admin/access/sessions", None),
-    ("DELETE", "/api/v1/admin/access/revoke", {"code": "somecode"}),
     ("GET", "/api/v1/admin/browse", None),
     ("GET", "/api/v1/admin/browse/some/path", None),
 ]
