@@ -13,13 +13,14 @@ from sharetree.api.admin.access import router as admin_access_router
 from sharetree.api.admin.auth import router as admin_auth_router
 from sharetree.api.admin.browse import router as admin_browse_router
 from sharetree.api.admin.deps import require_admin_group
+from sharetree.api.admin.logs import router as admin_logs_router
 from sharetree.api.auth import router as auth_router
 from sharetree.api.browse import router as browse_router
 from sharetree.api.download import router as download_router
 from sharetree.api.headers import router as headers_router
 from sharetree.api.health import router as health_router
 from sharetree.db import run_migrations
-from sharetree.logging import LoggingMiddleware, configure_logging
+from sharetree.logging import LoggingMiddleware, configure_logging, setup_download_logger
 from sharetree.settings import settings
 
 configure_logging()
@@ -28,6 +29,11 @@ configure_logging()
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     run_migrations()
+    setup_download_logger(
+        settings.DATA_PATH / "downloads.log",
+        settings.DOWNLOAD_LOG_MAX_BYTES,
+        settings.DOWNLOAD_LOG_BACKUP_COUNT,
+    )
     yield
 
 
@@ -54,6 +60,7 @@ if not settings.TRUST_HEADERS:
 admin = APIRouter(prefix="/admin", dependencies=[Depends(require_admin_group)])
 admin.include_router(admin_access_router)
 admin.include_router(admin_browse_router)
+admin.include_router(admin_logs_router)
 api.include_router(admin)
 
 app.include_router(api)

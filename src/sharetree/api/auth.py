@@ -3,6 +3,7 @@ from urllib.parse import unquote
 from fastapi import APIRouter, Header, HTTPException, Request
 from pydantic import BaseModel
 
+from sharetree.logging import log_download
 from sharetree.services import access as access_service
 from sharetree.services import browse as browse_service
 
@@ -41,6 +42,7 @@ async def forward_auth(
     active = access_service.get_session_access_codes(session_id) if session_id else None
     codes: list[str] = active["valid_active_codes"] if active else []
     patterns: list[str] = active["accessible_paths"] if active else []
+    nicks: list[str] = [d["nick"] for d in active["active_code_details"] if d["nick"]] if active else []
 
     request.state.extras = dict(
         auth_codes=codes,
@@ -49,5 +51,19 @@ async def forward_auth(
     )
 
     browse_service.get_file_path(path, patterns)  # raises HTTPException 403/404 on denial
+
+    client_ip: str | None = (
+        request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+        or request.headers.get("x-real-ip")
+        or (request.client.host if request.client else None)
+    )
+    log_download(
+        event="forward_auth_allowed",
+        path=path,
+        session_id=session_id,
+        nicks=nicks,
+        codes=codes,
+        client_ip=client_ip,
+    )
 
     return AuthResponse(allowed=True)
