@@ -11,7 +11,7 @@ import BreadcrumbLink from '@/components/ui/breadcrumb/BreadcrumbLink.vue'
 import BreadcrumbPage from '@/components/ui/breadcrumb/BreadcrumbPage.vue'
 import BreadcrumbSeparator from '@/components/ui/breadcrumb/BreadcrumbSeparator.vue'
 import { RouterLink } from 'vue-router'
-import { ChevronLeft, ChevronRight, ShieldCheck, Trash2, Unlink } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, ShieldCheck, Trash2, Unlink, Pencil, Check, X } from 'lucide-vue-next'
 
 const router = useRouter()
 const route = useRoute()
@@ -24,6 +24,10 @@ const loading = ref(false)
 const error = ref(null)
 const revoking = ref(null)
 const releasing = ref(null)
+const editingNick = ref(null)
+const editNickValue = ref('')
+
+const vFocus = { mounted: (el) => el.focus() }
 
 async function checkAuth() {
   try {
@@ -108,6 +112,30 @@ async function releaseCode(code) {
   }
 }
 
+function startEditNick(entry) {
+  editingNick.value = entry.code
+  editNickValue.value = entry.nick ?? ''
+}
+
+function cancelEditNick() {
+  editingNick.value = null
+  editNickValue.value = ''
+}
+
+async function saveNick(entry) {
+  const code = entry.code
+  const nick = editNickValue.value.trim() || null
+  editingNick.value = null
+  editNickValue.value = ''
+  await fetch('/api/v1/admin/access/nick', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code, nick }),
+  })
+  await loadPage(page.value)
+}
+
 watch(
   () => route.query.page,
   (val) => {
@@ -187,7 +215,26 @@ onMounted(async () => {
                 <span v-if="i === 0">{{ group.session_id ?? '(no session)' }}</span>
               </td>
               <td class="px-3 py-1.5 font-mono text-xs align-top">{{ entry.code }}</td>
-              <td class="px-3 py-1.5 text-xs text-muted-foreground align-top">{{ entry.nick ?? '—' }}</td>
+              <td class="px-3 py-1.5 text-xs text-muted-foreground align-top">
+                <template v-if="editingNick === entry.code">
+                  <div class="flex items-center gap-1">
+                    <input
+                      v-focus
+                      v-model="editNickValue"
+                      class="h-5 rounded border border-input bg-background px-1 text-xs font-sans focus:outline-none focus:ring-1 focus:ring-ring w-28"
+                      @keydown.enter="saveNick(entry)"
+                      @keydown.escape="cancelEditNick()"
+                    />
+                    <button @click="saveNick(entry)" class="text-muted-foreground hover:text-foreground" title="Save">
+                      <Check class="h-3.5 w-3.5" />
+                    </button>
+                    <button @click="cancelEditNick()" class="text-muted-foreground hover:text-foreground" title="Cancel">
+                      <X class="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </template>
+                <template v-else>{{ entry.nick ?? '—' }}</template>
+              </td>
               <td class="px-3 py-1.5 align-top">
                 <div class="flex flex-wrap gap-1">
                   <code
@@ -199,6 +246,16 @@ onMounted(async () => {
               </td>
               <td class="px-3 py-1.5 align-top">
                 <div class="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    class="h-6 w-6 text-muted-foreground hover:text-foreground"
+                    :disabled="editingNick === entry.code"
+                    @click="startEditNick(entry)"
+                    title="Rename"
+                  >
+                    <Pencil class="h-3.5 w-3.5" />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"

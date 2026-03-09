@@ -56,6 +56,19 @@ async def revoke_access_code(body: RevokeAccessCodeRequest) -> ResponseModel[Non
     return ResponseModel(data=None)
 
 
+class UpdateNickRequest(BaseModel):
+    code: str
+    nick: str | None
+
+
+@router.post("/nick", response_model=ResponseModel[None])
+async def update_nick(body: UpdateNickRequest) -> ResponseModel[None]:
+    found = access_service.update_access_code_nick(body.code, body.nick)
+    if not found:
+        raise HTTPException(status_code=404, detail="Access code not found")
+    return ResponseModel(data=None)
+
+
 class ReleaseAccessCodeRequest(BaseModel):
     code: str
 
