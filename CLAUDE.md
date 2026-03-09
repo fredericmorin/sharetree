@@ -17,6 +17,7 @@
 | Database | SQLite |
 | Frontend | Vue.js 3 + Vite + Tailwind CSS v4 + shadcn-vue |
 | Package manager | uv |
+| Logging | structlog |
 | Formatter / linter | Ruff (line length: 120) |
 | Type checker | ty |
 | Test runner | pytest |
@@ -37,7 +38,7 @@ sharetree/
 │   └── src/
 │       ├── assets/         # index.css — Tailwind entry + shadcn design tokens
 │       ├── lib/            # utils.js — cn() class merging helper
-│       ├── views/          # AccessView.vue, AdminLoginView.vue, AdminView.vue, AdminSessionsView.vue, AdminBrowseView.vue, AdminCreateAccessCodeView.vue, BrowseView.vue
+│       ├── views/          # AccessView.vue, AdminLoginView.vue, AdminView.vue, AdminSessionsView.vue, AdminBrowseView.vue, AdminCreateAccessCodeView.vue, BrowseView.vue, NotFoundView.vue
 │       └── components/
 │           ├── ui/         # shadcn-vue primitives: Button, Input, Card, Badge, Skeleton, Breadcrumb, Separator
 │           ├── FileIcon.vue     # File-type icon mapper (lucide-vue-next)
@@ -51,18 +52,28 @@ sharetree/
 │   ├── __main__.py         # CLI entry point; starts uvicorn on :8000
 │   ├── app.py              # FastAPI app, middleware, router registration
 │   ├── db.py               # SQLAlchemy engine, session factory, run_migrations()
+│   ├── logging.py          # structlog setup, LoggingMiddleware (per-request logs)
 │   ├── settings.py         # pydantic-settings config (SHARETREE_ prefix)
 │   ├── models/all.py       # AccessCode ORM model
+│   ├── tests/
+│   │   └── test_migrations.py        # Ensures all ORM changes have a migration
 │   ├── api/
 │   │   ├── health.py       # GET /api/v1/health
 │   │   ├── auth.py         # GET /api/v1/auth — forward-auth endpoint for reverse proxy
+│   │   ├── headers.py      # GET /api/v1/headers — echoes request headers (debug)
 │   │   ├── access.py       # GET/POST /api/v1/access*
 │   │   ├── browse.py       # GET /api/v1/browse[/{path}]
 │   │   ├── download.py     # GET /download/{path}
-│   │   └── admin/access.py # POST /api/v1/admin/access/create, GET /api/v1/admin/access/sessions
-│   │       admin/auth.py   # POST /api/v1/admin/login|logout, GET /api/v1/me
-│   │       admin/browse.py # GET /api/v1/admin/browse[/{path}] — full tree, no access-code filter
-│   │       admin/deps.py   # require_admin_group dependency (session or header)
+│   │   ├── tests/
+│   │   │   ├── test_access_activate.py
+│   │   │   └── test_auth.py
+│   │   └── admin/
+│   │       ├── access.py   # POST /api/v1/admin/access/create, GET /api/v1/admin/access/sessions
+│   │       ├── auth.py     # POST /api/v1/admin/login|logout
+│   │       ├── browse.py   # GET /api/v1/admin/browse[/{path}] — full tree, no access-code filter
+│   │       ├── deps.py     # require_admin_group dependency (session or header)
+│   │       └── tests/
+│   │           └── test_admin_auth.py
 │   └── services/
 │       ├── access.py       # Business logic: create/validate access codes
 │       ├── browse.py       # Business logic: directory listing, file path resolution
@@ -150,6 +161,7 @@ Base prefix: `/api/v1`
 | Method | Path | Description |
 |---|---|---|
 | GET | `/health` | Returns `{"status": "ok"}` |
+| GET | `/headers` | Echoes all request headers (debug endpoint) |
 | GET | `/auth` | Forward-auth check for reverse proxy; validates `X-Forwarded-Uri` against session access codes |
 | GET | `/me` | Returns active access codes and accessible paths from session and admin auth status |
 | POST | `/access/activate` | Validates and adds an access code to the session |
@@ -158,6 +170,7 @@ Base prefix: `/api/v1`
 | POST | `/admin/login` | Log in as admin using `ADMIN_PASSWORD` (disabled when `TRUST_HEADERS=true`) |
 | POST | `/admin/logout` | Clear admin session |
 | POST | `/admin/access/create` | Creates a new access code with given patterns |
+| DELETE | `/admin/access/revoke` | Deletes an access code by code value; returns 404 if not found |
 | GET | `/admin/access/sessions` | Lists access codes grouped by session, paginated (200/page) |
 | GET | `/admin/browse` | Lists root directory (full tree, no access-code filter; admin only) |
 | GET | `/admin/browse/{path}` | Lists a subdirectory (full tree, no access-code filter; admin only) |
@@ -189,10 +202,11 @@ Admin endpoints under `/api/v1/admin/` (except login/logout/me) require admin ac
 
 ## Testing
 
-- Tests are **co-located** with the code they test in a `tests/` subdirectory.
+- Tests are **co-located** with the code they test in `tests/` subdirectories: `api/tests/`, `api/admin/tests/`, `services/tests/`, and `src/sharetree/tests/`.
 - Use `pytest` with `tmp_path` for filesystem tests.
 - Mock `SHARE_ROOT` by patching `sharetree.services.browse.SHARE_ROOT`.
 - `conftest.py` at the repo root sets `SHARETREE_SESSION_SECRET` for all test runs.
+- `src/sharetree/tests/test_migrations.py` verifies all ORM model changes have a corresponding Alembic migration.
 
 ## Code Style
 

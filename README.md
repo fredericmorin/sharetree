@@ -24,10 +24,11 @@ See [CLAUDE.md](CLAUDE.md) for full developer documentation.
   - [x] Tailwind CSS v4 + shadcn-vue design system
   - [x] Dark/light mode toggle
   - [x] Loading skeletons, file-type icons, search/filter, copy-to-clipboard
-- [x] Admin API — create access codes with patterns and optional label
+- [x] Admin API — create and revoke access codes with patterns and optional label
 - [x] Admin authentication — session login page (password) or trusted headers (reverse proxy)
 - [x] Session tracking — records which user session first claimed each access code
   - [x] Admin page to browse claims grouped by session with pagination
+  - [x] Revoke (delete) individual access codes from the session claims view
 - [x] Admin file browser — browse the full server file tree and create access codes from any file or folder
 - [x] Forward-auth API endpoint — lets a reverse proxy (Caddy) serve file downloads directly from the filesystem
 

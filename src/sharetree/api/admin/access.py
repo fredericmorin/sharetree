@@ -1,5 +1,5 @@
 from api_exception import ResponseModel
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
 from sharetree.services import access as access_service
@@ -42,6 +42,18 @@ class SessionsPageResponse(BaseModel):
     page: int
     total_sessions: int
     total_pages: int
+
+
+class RevokeAccessCodeRequest(BaseModel):
+    code: str
+
+
+@router.delete("/revoke", response_model=ResponseModel[None])
+async def revoke_access_code(body: RevokeAccessCodeRequest) -> ResponseModel[None]:
+    found = access_service.revoke_access_code(body.code)
+    if not found:
+        raise HTTPException(status_code=404, detail="Access code not found")
+    return ResponseModel(data=None)
 
 
 @router.get("/sessions", response_model=ResponseModel[SessionsPageResponse])

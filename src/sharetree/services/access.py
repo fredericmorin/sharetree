@@ -58,6 +58,17 @@ def create_access_code(patterns: list[str], nick: str | None = None) -> str:
     return code
 
 
+def revoke_access_code(code: str) -> bool:
+    """Delete an access code. Returns True if it existed and was deleted, False if not found."""
+    with get_session() as session:
+        row = session.get(AccessCode, code)
+        if row is None:
+            return False
+        session.delete(row)
+        session.commit()
+        return True
+
+
 def set_access_code_session(code: str, session_id: str) -> None:
     """Record which session first claimed this access code."""
     with get_session() as session:

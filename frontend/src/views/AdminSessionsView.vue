@@ -11,7 +11,7 @@ import BreadcrumbLink from '@/components/ui/breadcrumb/BreadcrumbLink.vue'
 import BreadcrumbPage from '@/components/ui/breadcrumb/BreadcrumbPage.vue'
 import BreadcrumbSeparator from '@/components/ui/breadcrumb/BreadcrumbSeparator.vue'
 import { RouterLink } from 'vue-router'
-import { ChevronLeft, ChevronRight, ShieldCheck } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, ShieldCheck, Trash2 } from 'lucide-vue-next'
 
 const router = useRouter()
 const route = useRoute()
@@ -22,6 +22,7 @@ const totalSessions = ref(0)
 const totalPages = ref(1)
 const loading = ref(false)
 const error = ref(null)
+const revoking = ref(null)
 
 async function checkAuth() {
   try {
@@ -70,6 +71,23 @@ async function loadPage(p) {
 
 function goToPage(p) {
   router.push({ query: { page: p } })
+}
+
+async function revokeCode(code) {
+  revoking.value = code
+  try {
+    const res = await fetch('/api/v1/admin/access/revoke', {
+      method: 'DELETE',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
+    })
+    if (res.ok) {
+      await loadPage(page.value)
+    }
+  } finally {
+    revoking.value = null
+  }
 }
 
 watch(
@@ -137,6 +155,7 @@ onMounted(async () => {
             <th class="px-3 py-2 font-medium">Code</th>
             <th class="px-3 py-2 font-medium">Nick</th>
             <th class="px-3 py-2 font-medium">Patterns</th>
+            <th class="px-3 py-2 font-medium"></th>
           </tr>
         </thead>
         <tbody>
@@ -159,6 +178,17 @@ onMounted(async () => {
                     class="rounded bg-muted px-1 py-0.5 text-xs font-mono"
                   >{{ pattern }}</code>
                 </div>
+              </td>
+              <td class="px-3 py-1.5 align-top">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  class="h-6 w-6 text-muted-foreground hover:text-destructive"
+                  :disabled="revoking === entry.code"
+                  @click="revokeCode(entry.code)"
+                >
+                  <Trash2 class="h-3.5 w-3.5" />
+                </Button>
               </td>
             </tr>
           </template>
