@@ -1,7 +1,15 @@
 <script setup>
+import { ref } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import { Share2 } from 'lucide-vue-next'
+
+const goblinMode = ref(false)
+
+function toggleGoblin() {
+  goblinMode.value = !goblinMode.value
+  document.documentElement.classList.toggle('green-goblin', goblinMode.value)
+}
 </script>
 
 <template>
@@ -25,6 +33,13 @@ import { Share2 } from 'lucide-vue-next'
         </Transition>
       </RouterView>
     </main>
+
+    <button
+      title="Green Goblin Mode"
+      aria-label="Toggle green goblin mode"
+      class="fixed bottom-4 right-4 z-50 opacity-10 hover:opacity-60 transition-opacity text-xl select-none cursor-pointer bg-transparent border-none p-1"
+      @click="toggleGoblin"
+    >🎃</button>
   </div>
 </template>
 
