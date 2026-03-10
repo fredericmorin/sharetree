@@ -18,8 +18,11 @@ check: .venv frontend/node_modules
 	.venv/bin/uv run ruff format
 	.venv/bin/uv run ruff check --fix
 	.venv/bin/uv run ty check
-	.venv/bin/uv run pytest
 	cd frontend && npm run lint
+
+.PHONY: ci
+ci: check
+	.venv/bin/uv run pytest
 
 .venv: .venv/bin/uv pyproject.toml uv.lock
 	@echo "Installing dependencies..."

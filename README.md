@@ -7,9 +7,7 @@ File sharing via access codes. Administrators share server-side folder trees wit
 Tech stack: Python / FastAPI / SQLAlchemy / SQLite / Vue.js 3 / Vite / Tailwind CSS v4 / shadcn-vue
 
 ```sh
-make check       # installs .venv, runs ruff + ty + pytest
-make frontend    # build Vue.js frontend
-sharetree        # start dev server on :8000
+make dev     # start dev server on :8000 (user) and :8080 (admin)
 ```
 
 See [CLAUDE.md](CLAUDE.md) for full developer documentation.
@@ -20,15 +18,10 @@ See [CLAUDE.md](CLAUDE.md) for full developer documentation.
 - [x] Access code system — trade code for session access
   - [x] fnmatch glob pattern-based file/folder visibility
   - [x] File download with access control
-- [x] Vue.js frontend — browse files, activate access codes
-  - [x] Tailwind CSS v4 + shadcn-vue design system
-  - [x] Dark/light mode toggle
-  - [x] Loading skeletons, file-type icons, search/filter, copy-to-clipboard
-- [x] Admin API — create and revoke access codes with patterns and optional label
-- [x] Admin authentication — session login page (password) or trusted headers (reverse proxy)
-- [x] Session tracking — records which user session first claimed each access code
-  - [x] Admin page to browse claims grouped by session with pagination
-  - [x] Revoke (delete) individual access codes from the session claims view
+- [x] Admin authentication — trusted headers (reverse proxy forward_auth)
+  - [x] Alternate login page (password) if standalone
+- [x] Session tracking — records which user session claimed each access code
+  - [x] Revoke (delete or unbind) individual access codes from the session claims view
 - [x] Admin file browser — browse the full server file tree and create access codes from any file or folder
 - [x] Forward-auth API endpoint — lets a reverse proxy (Caddy) serve file downloads directly from the filesystem
 
@@ -39,12 +32,11 @@ See [CLAUDE.md](CLAUDE.md) for full developer documentation.
   - [x] WAF — Coraza with OWASP CRS rules (blocking mode, `coraza-caddy` plugin)
   - [x] Rate limiting — per-IP limits on brute-force endpoints (`caddy-ratelimit` plugin)
   - [x] Upload size limits — 10 MB max request body (`request_body` directive)
-- [ ] Redis session store
 
 ### Docker
 
 ```sh
-docker build -t sharetree .
+make docker-build
 ```
 
 The app always listens on **port 8000**. Admin authentication works in two modes:
@@ -55,7 +47,6 @@ The app always listens on **port 8000**. Admin authentication works in two modes
 
 ```sh
 cd docker
-cp ../.env.example .env   # set SHARETREE_SESSION_SECRET and SHARETREE_ADMIN_PASSWORD
 docker compose -f docker-compose.prod.yml up -d
 ```
 
@@ -134,7 +125,3 @@ docker compose up -d
 | `SHARETREE_TRUST_HEADERS` | no | `false` | Trust `Remote-Groups` header from upstream proxy; disables the admin login page |
 | `SHARETREE_SHARE_ROOT` | no | `/files` | Path to the folder tree to share (mount a volume here) |
 | `SHARETREE_DATA_PATH` | no | `/data` | Path where the SQLite database is stored (mount a volume here) |
-
-## Refs
-
-- https://medium.com/@aahana.khanal11/scaling-a-fastapi-application-handling-multiple-requests-at-once-e5c128720c95

@@ -24,4 +24,4 @@ jobs:
         enable-cache: true
     - name: check
       run: |
-        make check
+        make ci

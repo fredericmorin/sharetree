@@ -21,87 +21,21 @@
 | Formatter / linter | Ruff (line length: 120) |
 | Type checker | ty |
 | Test runner | pytest |
-| CI | GitHub Actions (`make check` on push/PR) |
+| CI | GitHub Actions (`make ci` on push/PR) |
 
-## Directory Structure
-
-```
-sharetree/
-├── .github/workflows/python-app.yml  # CI: ruff + ty + pytest on push/PR
-├── bin/
-│   ├── setup-dev-venv.sh   # Create + populate venv via uv
-│   └── verify              # Run ruff format, ruff check --fix, ty check
-├── docker/
-│   ├── Caddyfile               # Production Caddy config (WAF + rate-limit + forward-auth + file_server)
-│   ├── Dockerfile.caddy        # Custom Caddy build (caddy-ratelimit + coraza-caddy plugins via xcaddy)
-│   └── docker-compose.prod.yml # Production compose: Caddy + API with forward-auth
-├── frontend/               # Vue.js 3 SPA (Vite + Tailwind CSS v4 + shadcn-vue)
-│   └── src/
-│       ├── assets/         # index.css — Tailwind entry + shadcn design tokens
-│       ├── lib/            # utils.js — cn() class merging helper
-│       ├── views/          # AccessView.vue, AdminLoginView.vue, AdminView.vue, AdminSessionsView.vue, AdminBrowseView.vue, AdminCreateAccessCodeView.vue, BrowseView.vue, NotFoundView.vue
-│       └── components/
-│           ├── ui/         # shadcn-vue primitives: Button, Input, Card, Badge, Skeleton, Breadcrumb, Separator
-│           ├── FileIcon.vue     # File-type icon mapper (lucide-vue-next)
-│           ├── ThemeToggle.vue  # Dark/light mode toggle (@vueuse/core)
-│           ├── Breadcrumbs.vue  # Navigation breadcrumbs
-│           └── EntryList.vue    # Directory listing with search filter
-├── migrations/             # Alembic versioned migrations
-│   └── versions/0001_initial_schema.py
-│   └── versions/0002_add_session_id_to_access_codes.py
-├── src/sharetree/
-│   ├── __main__.py         # CLI entry point; starts uvicorn on :8000
-│   ├── app.py              # FastAPI app, middleware, router registration
-│   ├── db.py               # SQLAlchemy engine, session factory, run_migrations()
-│   ├── logging.py          # structlog setup, LoggingMiddleware (per-request logs)
-│   ├── settings.py         # pydantic-settings config (SHARETREE_ prefix)
-│   ├── models/all.py       # AccessCode ORM model
-│   ├── tests/
-│   │   └── test_migrations.py        # Ensures all ORM changes have a migration
-│   ├── api/
-│   │   ├── health.py       # GET /api/v1/health
-│   │   ├── auth.py         # GET /api/v1/auth — forward-auth endpoint for reverse proxy
-│   │   ├── headers.py      # GET /api/v1/headers — echoes request headers (debug)
-│   │   ├── access.py       # GET/POST /api/v1/access*
-│   │   ├── browse.py       # GET /api/v1/browse[/{path}]
-│   │   ├── download.py     # GET /download/{path}
-│   │   ├── tests/
-│   │   │   ├── test_access_activate.py
-│   │   │   └── test_auth.py
-│   │   └── admin/
-│   │       ├── access.py   # POST /api/v1/admin/access/create, GET /api/v1/admin/access/sessions
-│   │       ├── auth.py     # POST /api/v1/admin/login|logout
-│   │       ├── browse.py   # GET /api/v1/admin/browse[/{path}] — full tree, no access-code filter
-│   │       ├── deps.py     # require_admin_group dependency (session or header)
-│   │       └── tests/
-│   │           └── test_admin_auth.py
-│   └── services/
-│       ├── access.py       # Business logic: create/validate access codes
-│       ├── browse.py       # Business logic: directory listing, file path resolution
-│       └── tests/
-│           ├── test_browse.py        # Tests for list_directory_entries()
-│           └── test_get_file_path.py # Tests for get_file_path()
-├── static/                 # Built frontend output (served by FastAPI)
-├── .dockerignore
-├── alembic.ini
-├── conftest.py             # Sets SHARETREE_SESSION_SECRET for test runs
-├── Dockerfile              # Multi-stage build: frontend + Python
-├── Makefile
-└── pyproject.toml
-```
 
 ## Development Setup
 
+venv
+
 ```bash
-make check   # installs .venv automatically, then runs ruff + ty + pytest
+make .venv  # installs .venv and sharetree pyproject.toml
 ```
 
-Or manually:
+Check code lint/format/typecheck
 
 ```bash
-python3 -m venv .venv
-.venv/bin/pip install uv
-.venv/bin/uv sync
+make check   # installs .venv automatically, then runs ruff + ty + eslint
 ```
 
 ### Environment variables
@@ -123,8 +57,7 @@ SHARETREE_DEV=true                         # optional, enables uvicorn auto-relo
 |---|---|
 | Run dev server | `python -m sharetree` or `sharetree` |
 | Build frontend | `make frontend` |
-| Format + lint + type-check | `bin/verify` |
-| Run full check suite | `make check` |
+| Format + lint + type-check | `make check` |
 | Run tests | `pytest` |
 | Apply DB migrations | `make migrate` |
 | Create new migration | `make migration msg="description"` |
@@ -177,7 +110,7 @@ Base prefix: `/api/v1`
 | GET | `/admin/browse/{path}` | Lists a subdirectory (full tree, no access-code filter; admin only) |
 | GET | `/download/{path}` | Downloads a file (access-controlled) |
 
-Admin endpoints under `/api/v1/admin/` (except login/logout/me) require admin access. When `TRUST_HEADERS=false` (default), log in via `POST /api/v1/admin/login` with the configured `ADMIN_PASSWORD`. When `TRUST_HEADERS=true`, the upstream proxy must forward `Remote-Groups: admins`.
+Admin endpoints under `/api/v1/admin/` (except login/logout) require admin access. When `TRUST_HEADERS=false` (default), log in via `POST /api/v1/admin/login` with the configured `ADMIN_PASSWORD`. When `TRUST_HEADERS=true`, the upstream proxy must forward `Remote-Groups: admins`.
 
 ## Database
 
@@ -193,19 +126,6 @@ Admin endpoints under `/api/v1/admin/` (except login/logout/me) require admin ac
 | `nick` | `str \| None` | Optional human-readable label |
 | `session_id` | `str \| None` | UUID of the first user session that activated this code (indexed) |
 
-## Security Model
-
-- Users activate access codes via `POST /api/v1/access/activate`. Active codes are stored in the encrypted server-side session (Starlette `SessionMiddleware`).
-- Each code maps to a list of `fnmatch` patterns controlling which paths are visible and downloadable.
-- Pattern examples: `/docs/*` (shallow), `/reports/**` (recursive — `*` matches `/` in fnmatch).
-- **Path traversal protection:** `services/browse.py` resolves paths with `.resolve()` and verifies they remain under `SHARE_ROOT`. Symlink escapes are blocked.
-- **Rate limiting:** Implemented in the production Caddy config (`docker/Caddyfile`) via the `caddy-ratelimit` plugin (compiled into the custom `Dockerfile.caddy` image):
-  - `POST /api/v1/access/activate` — 5 attempts per IP per minute (brute-force surface for access codes).
-  - `POST /api/v1/admin/login` — 10 attempts per IP per 5 minutes (brute-force surface for admin password). Only active in default mode (`TRUST_HEADERS=false`); trusted-headers mode disables the login endpoint entirely.
-  - Exceeding a limit returns HTTP 429.
-- **WAF:** Implemented via `coraza-caddy` (Coraza WAF with OWASP CRS rules, blocking mode) in the production Caddy config. Applied globally before routing. Change `SecRuleEngine On` to `DetectionOnly` in `docker/Caddyfile` for a non-blocking initial rollout.
-- **Upload size limits:** `request_body max_size 10MB` in `docker/Caddyfile` rejects oversized POST bodies with HTTP 413 (native Caddy, no plugin required).
-
 ## Testing
 
 - Tests are **co-located** with the code they test in `tests/` subdirectories: `api/tests/`, `api/admin/tests/`, `services/tests/`, and `src/sharetree/tests/`.
@@ -216,10 +136,9 @@ Admin endpoints under `/api/v1/admin/` (except login/logout/me) require admin ac
 
 ## Code Style
 
-- **Formatter/linter:** Ruff (`ruff format`, `ruff check --fix`)
+- **Formatter/linter/type checker:** Run `make check`
 - **Line length:** 120 characters
-- **Type checker:** `ty check` (not Mypy)
-- Run `bin/verify` before pushing; CI enforces `make check` on all PRs.
+- Run `make ci` before pushing
 
 ## Git Conventions
 
@@ -246,51 +165,7 @@ Include the doc update in the same commit or as a follow-up `dev: update docs` c
 
 ## Docker Deployment
 
-```bash
-docker build -t sharetree .
-```
-
-The app always listens on **port 8000**. The image supports two admin auth modes controlled by `SHARETREE_TRUST_HEADERS`:
-
-- **Default mode** (`TRUST_HEADERS` falsy): Built-in admin login page at `/admin/login`. Set `SHARETREE_ADMIN_PASSWORD` to protect the admin API.
-- **Trusted-headers mode** (`TRUST_HEADERS=true`): An upstream reverse proxy handles auth and forwards `Remote-Groups: admins` to the app. The login page is disabled.
-
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `SHARETREE_SESSION_SECRET` | yes | — | Secret key for encrypted session cookies |
-| `SHARETREE_ADMIN_PASSWORD` | when `TRUST_HEADERS` is falsy | — | Password for the built-in admin login page |
-| `SHARETREE_TRUST_HEADERS` | no | `false` | Trust `Remote-Groups` header from upstream proxy; disables login page |
-| `SHARETREE_SHARE_ROOT` | no | `/files` | Path to shared folder tree (mount a volume) |
-| `SHARETREE_DATA_PATH` | no | `/data` | Path to SQLite database directory (mount a volume) |
-
-Volumes: `/data` (database), `/files` (shared files). Health check: `GET /api/v1/health`.
-
-### Production with Caddy (forward-auth + WAF + rate limiting)
-
-`docker/docker-compose.prod.yml` provides a ready-to-use production setup where Caddy serves file downloads **directly from the filesystem**, bypassing Python for file I/O. Python only handles the auth check at `GET /api/v1/auth`.
-
-The Caddy service is built from `docker/Dockerfile.caddy`, which compiles a custom Caddy binary with two plugins via `xcaddy`:
-- **`caddy-ratelimit`** (`github.com/mholt/caddy-ratelimit`) — rate limits brute-force endpoints.
-- **`coraza-caddy`** (`github.com/corazawaf/coraza-caddy/v2`) — OWASP CRS WAF, runs before all other handlers.
-
-> **Note:** The first `docker compose build` takes several minutes as xcaddy compiles Go code. Subsequent builds are fast thanks to Go module cache mounts.
-
-```
-User → Caddy → GET /api/v1/auth (Python checks session)
-                   ↓ 200 OK
-             Caddy serves /files/<path> directly
-```
-
-Caddy's `forward_auth` directive forwards the session cookie to the auth endpoint. The `X-Forwarded-Uri` header carries the original request path (e.g. `/download/path/to/file.pdf`), which the endpoint uses to resolve and validate the file against the user's access patterns.
-
-```bash
-cd docker
-docker compose -f docker-compose.prod.yml up -d
-```
-
-Set `SHARETREE_FILES_PATH` to the host directory containing the files to share (default: `../files`). Both the Caddy and API containers mount this path at `/files`.
-
-> **Note:** If you change `SHARETREE_SHARE_ROOT` from its default (`/files`), update the `root * /files` and `uri strip_prefix /download` directives in `docker/Caddyfile` accordingly.
+README.md
 
 ## Not Yet Implemented
 
