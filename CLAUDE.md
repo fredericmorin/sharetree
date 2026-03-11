@@ -98,13 +98,13 @@ Base prefix: `/api/v1`
 | GET | `/headers` | Echoes all request headers (debug endpoint) |
 | GET | `/auth` | Forward-auth check for reverse proxy; validates `X-Forwarded-Uri` against session access codes |
 | GET | `/me` | Returns active access codes and accessible paths from session and admin auth status |
-| POST | `/access/activate` | Validates and adds an access code to the session |
+| POST | `/access_code/{code}/activate` | Validates and adds an access code to the session |
 | GET | `/browse` | Lists root directory (filtered by session access codes) |
 | GET | `/browse/{path}` | Lists a subdirectory |
 | POST | `/admin/login` | Log in as admin using `ADMIN_PASSWORD` (disabled when `TRUST_HEADERS=true`) |
 | POST | `/admin/logout` | Clear admin session |
-| POST | `/admin/access/create` | Creates a new access code with given patterns |
-| DELETE | `/admin/access/revoke` | Deletes an access code by code value; returns 404 if not found |
+| POST | `/admin/access_code` | Creates a new access code with given patterns |
+| DELETE | `/admin/access_code/{code}` | Deletes an access code by code value; returns 404 if not found |
 | GET | `/admin/access/sessions` | Lists access codes grouped by session, paginated (200/page) |
 | GET | `/admin/browse` | Lists root directory (full tree, no access-code filter; admin only) |
 | GET | `/admin/browse/{path}` | Lists a subdirectory (full tree, no access-code filter; admin only) |

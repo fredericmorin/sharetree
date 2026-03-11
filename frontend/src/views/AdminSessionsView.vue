@@ -82,11 +82,9 @@ function goToPage(p) {
 async function revokeCode(code) {
   revoking.value = code
   try {
-    const res = await fetch('/api/v1/admin/access/revoke', {
+    const res = await fetch(`/api/v1/admin/access_code/${encodeURIComponent(code)}`, {
       method: 'DELETE',
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code }),
     })
     if (res.ok) {
       await loadPage(page.value)

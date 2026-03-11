@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from sharetree.services import access as access_service
 
 router = APIRouter(prefix="/access")
+access_code_router = APIRouter(prefix="/access_code")
 
 PAGE_SIZE = 200
 
@@ -20,7 +21,7 @@ class CreateAccessCodeResponse(BaseModel):
     nick: str | None
 
 
-@router.post("/create", response_model=ResponseModel[CreateAccessCodeResponse])
+@access_code_router.post("", response_model=ResponseModel[CreateAccessCodeResponse])
 async def create_access_code(body: CreateAccessCodeRequest) -> ResponseModel[CreateAccessCodeResponse]:
     code = access_service.create_access_code(body.patterns, body.nick)
     return ResponseModel(data=CreateAccessCodeResponse(code=code, patterns=body.patterns, nick=body.nick))
@@ -44,13 +45,9 @@ class SessionsPageResponse(BaseModel):
     total_pages: int
 
 
-class RevokeAccessCodeRequest(BaseModel):
-    code: str
-
-
-@router.delete("/revoke", response_model=ResponseModel[None])
-async def revoke_access_code(body: RevokeAccessCodeRequest) -> ResponseModel[None]:
-    found = access_service.revoke_access_code(body.code)
+@access_code_router.delete("/{code}", response_model=ResponseModel[None])
+async def revoke_access_code(code: str) -> ResponseModel[None]:
+    found = access_service.revoke_access_code(code)
     if not found:
         raise HTTPException(status_code=404, detail="Access code not found")
     return ResponseModel(data=None)
