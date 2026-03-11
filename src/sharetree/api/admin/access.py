@@ -82,13 +82,9 @@ async def duplicate_access_code(body: DuplicateAccessCodeRequest) -> ResponseMod
     return ResponseModel(data=DuplicateAccessCodeResponse(code=new_code))
 
 
-class ReleaseAccessCodeRequest(BaseModel):
-    code: str
-
-
-@router.post("/release", response_model=ResponseModel[None])
-async def release_access_code(body: ReleaseAccessCodeRequest) -> ResponseModel[None]:
-    found = access_service.release_access_code(body.code)
+@access_code_router.post("/{code}/release", response_model=ResponseModel[None])
+async def release_access_code(code: str) -> ResponseModel[None]:
+    found = access_service.release_access_code(code)
     if not found:
         raise HTTPException(status_code=404, detail="Access code not found")
     return ResponseModel(data=None)

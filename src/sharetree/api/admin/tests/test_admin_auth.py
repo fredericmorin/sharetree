@@ -23,7 +23,7 @@ ADMIN_PASSWORD = "supersecret"
 PROTECTED_ADMIN_ENDPOINTS = [
     ("POST", "/api/v1/admin/access_code", {"patterns": ["/docs/*"], "nick": "test"}),
     ("DELETE", "/api/v1/admin/access_code/sometoken", None),
-    ("POST", "/api/v1/admin/access/release", {"patterns": ["/docs/*"], "nick": "test"}),
+    ("POST", "/api/v1/admin/access_code/sometoken/release", None),
     ("GET", "/api/v1/admin/access/sessions", None),
     ("GET", "/api/v1/admin/browse", None),
     ("GET", "/api/v1/admin/browse/some/path", None),

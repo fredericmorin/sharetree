@@ -105,6 +105,7 @@ Base prefix: `/api/v1`
 | POST | `/admin/logout` | Clear admin session |
 | POST | `/admin/access_code` | Creates a new access code with given patterns |
 | DELETE | `/admin/access_code/{code}` | Deletes an access code by code value; returns 404 if not found |
+| POST | `/admin/access_code/{code}/release` | Unlinks an access code from its session; returns 404 if not found |
 | GET | `/admin/access/sessions` | Lists access codes grouped by session, paginated (200/page) |
 | GET | `/admin/browse` | Lists root directory (full tree, no access-code filter; admin only) |
 | GET | `/admin/browse/{path}` | Lists a subdirectory (full tree, no access-code filter; admin only) |
