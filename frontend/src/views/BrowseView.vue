@@ -84,11 +84,9 @@ async function activateCode() {
   codeError.value = null
   submitting.value = true
   try {
-    const res = await fetch('/api/v1/access/activate', {
+    const res = await fetch(`/api/v1/access_code/${encodeURIComponent(newCode.value.trim())}/activate`, {
       method: 'POST',
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: newCode.value.trim() }),
     })
     if (res.status === 404) {
       codeError.value = 'Invalid access code.'

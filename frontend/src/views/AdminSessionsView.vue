@@ -82,11 +82,9 @@ function goToPage(p) {
 async function revokeCode(code) {
   revoking.value = code
   try {
-    const res = await fetch('/api/v1/admin/access/revoke', {
+    const res = await fetch(`/api/v1/admin/access_code/${encodeURIComponent(code)}`, {
       method: 'DELETE',
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code }),
     })
     if (res.ok) {
       await loadPage(page.value)
@@ -116,11 +114,9 @@ async function duplicateCode(code) {
 async function releaseCode(code) {
   releasing.value = code
   try {
-    const res = await fetch('/api/v1/admin/access/release', {
+    const res = await fetch(`/api/v1/admin/access_code/${encodeURIComponent(code)}/release`, {
       method: 'POST',
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code }),
     })
     if (res.ok) {
       await loadPage(page.value)

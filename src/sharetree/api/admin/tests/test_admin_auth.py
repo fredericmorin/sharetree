@@ -13,7 +13,7 @@ from fastapi.testclient import TestClient
 
 from sharetree.app import app
 
-ADMIN_URL = "/api/v1/admin/access/create"
+ADMIN_URL = "/api/v1/admin/access_code"
 LOGIN_URL = "/api/v1/admin/login"
 LOGOUT_URL = "/api/v1/admin/logout"
 VALID_BODY = {"patterns": ["/docs/*"], "nick": "test"}
@@ -21,9 +21,9 @@ ADMIN_PASSWORD = "supersecret"
 
 # All protected admin endpoints: (method, path, json_body)
 PROTECTED_ADMIN_ENDPOINTS = [
-    ("POST", "/api/v1/admin/access/create", {"patterns": ["/docs/*"], "nick": "test"}),
-    ("DELETE", "/api/v1/admin/access/revoke", {"patterns": ["/docs/*"], "nick": "test"}),
-    ("POST", "/api/v1/admin/access/release", {"patterns": ["/docs/*"], "nick": "test"}),
+    ("POST", "/api/v1/admin/access_code", {"patterns": ["/docs/*"], "nick": "test"}),
+    ("DELETE", "/api/v1/admin/access_code/sometoken", None),
+    ("POST", "/api/v1/admin/access_code/sometoken/release", None),
     ("GET", "/api/v1/admin/access/sessions", None),
     ("GET", "/api/v1/admin/browse", None),
     ("GET", "/api/v1/admin/browse/some/path", None),

@@ -59,7 +59,7 @@ async function submit() {
       return
     }
 
-    const res = await fetch('/api/v1/admin/access/create', {
+    const res = await fetch('/api/v1/admin/access_code', {
       method: 'POST',
       credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },

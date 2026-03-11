@@ -9,6 +9,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from sharetree.api.access import me_router
 from sharetree.api.access import router as access_router
+from sharetree.api.admin.access import access_code_router as admin_access_code_router
 from sharetree.api.admin.access import router as admin_access_router
 from sharetree.api.admin.auth import router as admin_auth_router
 from sharetree.api.admin.browse import router as admin_browse_router
@@ -59,6 +60,7 @@ if not settings.TRUST_HEADERS:
 
 admin = APIRouter(prefix="/admin", dependencies=[Depends(require_admin_group)])
 admin.include_router(admin_access_router)
+admin.include_router(admin_access_code_router)
 admin.include_router(admin_browse_router)
 admin.include_router(admin_logs_router)
 api.include_router(admin)

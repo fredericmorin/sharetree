@@ -1,14 +1,14 @@
 import uuid
 
 from api_exception import APIException, BaseExceptionCode, ResponseModel
-from fastapi import APIRouter, Header, Request, Response
+from fastapi import APIRouter, Header, Request
 from pydantic import BaseModel
 
 from sharetree.api.admin.deps import check_is_admin
 from sharetree.services import access as access_service
 
 me_router = APIRouter(prefix="/me")
-router = APIRouter(prefix="/access")
+router = APIRouter(prefix="/access_code")
 
 
 class ActiveCodeDetail(BaseModel):
@@ -53,25 +53,21 @@ class AccessCodeExceptionCode(BaseExceptionCode):
     ACCESS_CODE_NOT_FOUND = ("NOT_FOUND", "Access code not found.")
 
 
-class AccessCodeRequest(BaseModel):
-    code: str
-
-
 def _get_or_create_session_id(request: Request) -> str:
     if "session_id" not in request.session:
         request.session["session_id"] = str(uuid.uuid4())
     return request.session["session_id"]
 
 
-@router.post("/activate", response_model=ResponseModel[None])
-async def activate_access_code(body: AccessCodeRequest, request: Request, response: Response) -> ResponseModel[None]:
+@router.post("/{code}/activate", response_model=ResponseModel[None])
+async def activate_access_code(code: str, request: Request) -> ResponseModel[None]:
     session_id = _get_or_create_session_id(request)
 
-    if access_service.is_access_code_active_for_session(body.code, session_id):
+    if access_service.is_access_code_active_for_session(code, session_id):
         return ResponseModel(error_code="ALREADY_ACTIVE")
 
-    if not access_service.is_access_code_unclaimed(body.code):
+    if not access_service.is_access_code_unclaimed(code):
         raise APIException(AccessCodeExceptionCode.ACCESS_CODE_NOT_FOUND, http_status_code=404)
 
-    access_service.set_access_code_session(body.code, session_id)
+    access_service.set_access_code_session(code, session_id)
     return ResponseModel()

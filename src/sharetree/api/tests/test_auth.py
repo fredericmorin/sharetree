@@ -29,7 +29,7 @@ def client_with_session() -> TestClient:
         patch("sharetree.api.access.access_service.is_access_code_unclaimed", return_value=True),
         patch("sharetree.api.access.access_service.set_access_code_session"),
     ):
-        client.post("/api/v1/access/activate", json={"code": "session-init"})
+        client.post("/api/v1/access_code/session-init/activate")
     return client
 
 
