@@ -39,8 +39,8 @@ services:
     command:
       - |
         set -ex
-        pip install uv
-        uv sync
+        pip install uv -q
+        uv sync --frozen
         .venv/bin/sharetree
 
   frontend:
